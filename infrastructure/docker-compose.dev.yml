@@ -213,6 +213,38 @@ services:
       timeout: 10s
       retries: 5
 
+  # Progress Service
+  progress-service:
+    build:
+      context: ../backend/progress-service
+      dockerfile: Dockerfile
+    container_name: pilotquiz-progress-service
+    ports:
+      - "8003:8003"
+    environment:
+      # Database - for production, these would point to AWS RDS
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-progress:5432/progressdb
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-pilotquiz}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-pilotquiz123}
+      # Eureka
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      # Kafka
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      postgres-progress:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - pilotquiz-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8003/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
 volumes:
   postgres_user_data:
   postgres_quiz_data:
