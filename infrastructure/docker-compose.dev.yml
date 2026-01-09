@@ -253,3 +253,4 @@ volumes:
 networks:
   pilotquiz-network:
     driver: bridge
+    name: pilotquiz-network
