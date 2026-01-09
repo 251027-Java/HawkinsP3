@@ -1,7 +1,12 @@
-# Docker Compose for Local Development Infrastructure
-# Start this before running backend services locally
+# Docker Compose for Local Development - Full Stack
+# Includes infrastructure AND backend services
+# For production, services connect to AWS RDS instead of local PostgreSQL
 
 services:
+  # ===========================================
+  # INFRASTRUCTURE
+  # ===========================================
+
   # PostgreSQL for User Service
   postgres-user:
     image: postgres:15-alpine
@@ -14,8 +19,10 @@ services:
       - "5432:5432"
     volumes:
       - postgres_user_data:/var/lib/postgresql/data
+    networks:
+      - pilotquiz-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U pilotquiz -d userdb"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pilotquiz} -d userdb"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -32,8 +39,10 @@ services:
       - "5433:5432"
     volumes:
       - postgres_quiz_data:/var/lib/postgresql/data
+    networks:
+      - pilotquiz-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U pilotquiz -d quizdb"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pilotquiz} -d quizdb"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -50,8 +59,10 @@ services:
       - "5434:5432"
     volumes:
       - postgres_progress_data:/var/lib/postgresql/data
+    networks:
+      - pilotquiz-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U pilotquiz -d progressdb"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pilotquiz} -d progressdb"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -65,6 +76,8 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
     ports:
       - "2181:2181"
+    networks:
+      - pilotquiz-network
 
   # Kafka for event-driven communication
   kafka:
@@ -83,9 +96,120 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    networks:
+      - pilotquiz-network
     healthcheck:
       test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
       interval: 10s
+      timeout: 10s
+      retries: 5
+
+  # ===========================================
+  # BACKEND SERVICES
+  # ===========================================
+
+  # Eureka Server - Service Discovery
+  eureka-server:
+    build:
+      context: ../backend/eureka-server
+      dockerfile: Dockerfile
+    container_name: pilotquiz-eureka-server
+    ports:
+      - "8761:8761"
+    networks:
+      - pilotquiz-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8761/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ../backend/api-gateway
+      dockerfile: Dockerfile
+    container_name: pilotquiz-api-gateway
+    ports:
+      - "8888:8888"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      JWT_SECRET: ${JWT_SECRET:-your-256-bit-secret-key-for-jwt-signing-min-32-chars}
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - pilotquiz-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8888/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # User Service
+  user-service:
+    build:
+      context: ../backend/user-service
+      dockerfile: Dockerfile
+    container_name: pilotquiz-user-service
+    ports:
+      - "8001:8001"
+    environment:
+      # Database - for production, these would point to AWS RDS
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-user:5432/userdb
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-pilotquiz}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-pilotquiz123}
+      # Eureka
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      # Kafka
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      # JWT
+      JWT_SECRET: ${JWT_SECRET:-your-256-bit-secret-key-for-jwt-signing-min-32-chars}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      postgres-user:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - pilotquiz-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8001/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Quiz Service
+  quiz-service:
+    build:
+      context: ../backend/quiz-service
+      dockerfile: Dockerfile
+    container_name: pilotquiz-quiz-service
+    ports:
+      - "8002:8002"
+    environment:
+      # Database - for production, these would point to AWS RDS
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-quiz:5432/quizdb
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-pilotquiz}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-pilotquiz123}
+      # Eureka
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      # Kafka
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      postgres-quiz:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - pilotquiz-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8002/actuator/health"]
+      interval: 30s
       timeout: 10s
       retries: 5
 
@@ -93,3 +217,7 @@ volumes:
   postgres_user_data:
   postgres_quiz_data:
   postgres_progress_data:
+
+networks:
+  pilotquiz-network:
+    driver: bridge

@@ -176,5 +176,45 @@ This document tracks significant architectural decisions made during the develop
 
 ---
 
+## ADR-008: AWS RDS for Production Databases
+
+**Date:** 2026-01-09  
+**Status:** Accepted  
+**Context:** Production deployment requires managed, scalable databases.  
+
+**Decision:** Use AWS RDS for PostgreSQL in production, local containers for development.
+
+**Rationale:**
+
+- Managed service reduces operational burden
+- Automated backups and point-in-time recovery
+- Multi-AZ deployment for high availability
+- Automatic patching and maintenance
+- Scalable storage and compute
+
+**Environment Configuration:**
+
+| Environment | Database Host | Configuration Source |
+|-------------|---------------|---------------------|
+| Development | `postgres-*` containers | `docker-compose.dev.yml` |
+| Production | AWS RDS endpoints | Environment variables / AWS Secrets Manager |
+
+**Environment Variables:**
+
+```
+SPRING_DATASOURCE_URL=jdbc:postgresql://<RDS_ENDPOINT>:5432/<DB_NAME>
+SPRING_DATASOURCE_USERNAME=<from AWS Secrets Manager>
+SPRING_DATASOURCE_PASSWORD=<from AWS Secrets Manager>
+```
+
+**Consequences:**
+
+- Need to manage RDS credentials securely (AWS Secrets Manager)
+- VPC configuration for RDS access from EC2
+- Separate development and production configurations
+- Cost considerations for RDS instances
+
+---
+
 *Generated with assistance from Gemini AI*
 *Reviewed and modified by Richard Hawkins*
