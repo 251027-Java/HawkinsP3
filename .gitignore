@@ -26,7 +26,7 @@ Thumbs.db
 # Test outputs
 coverage/
 *.lcov
-test-results/
+/test*
 
 # Build artifacts
 *.jar
