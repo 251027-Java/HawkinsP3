@@ -25,6 +25,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -73,7 +74,7 @@ class AuthServiceTest {
                 .password("encodedPassword")
                 .firstName("John")
                 .lastName("Doe")
-                .role(User.Role.USER)
+                .role(User.Role.ROLE_USER)
                 .build();
     }
 
@@ -85,8 +86,8 @@ class AuthServiceTest {
         when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
         when(userRepository.save(any(User.class))).thenReturn(testUser);
         when(pilotProfileRepository.save(any(PilotProfile.class))).thenReturn(new PilotProfile());
-        when(jwtService.generateToken(any(User.class))).thenReturn("jwt-token");
-        doNothing().when(kafkaProducerService).sendUserRegisteredEvent(any(User.class));
+        when(jwtService.generateToken(anyLong(), anyString(), anyString())).thenReturn("jwt-token");
+        doNothing().when(kafkaProducerService).sendUserRegisteredEvent(anyLong(), anyString());
 
         // When
         AuthResponse response = authService.register(registerRequest);
@@ -97,7 +98,7 @@ class AuthServiceTest {
         assertThat(response.getEmail()).isEqualTo("test@example.com");
         verify(userRepository).save(any(User.class));
         verify(pilotProfileRepository).save(any(PilotProfile.class));
-        verify(kafkaProducerService).sendUserRegisteredEvent(any(User.class));
+        verify(kafkaProducerService).sendUserRegisteredEvent(anyLong(), anyString());
     }
 
     @Test
@@ -120,7 +121,7 @@ class AuthServiceTest {
         // Given
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(testUser));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
-        when(jwtService.generateToken(any(User.class))).thenReturn("jwt-token");
+        when(jwtService.generateToken(anyLong(), anyString(), anyString())).thenReturn("jwt-token");
 
         // When
         AuthResponse response = authService.login(loginRequest);
@@ -140,7 +141,7 @@ class AuthServiceTest {
         // When/Then
         assertThatThrownBy(() -> authService.login(loginRequest))
                 .isInstanceOf(InvalidCredentialsException.class)
-                .hasMessageContaining("Invalid credentials");
+                .hasMessageContaining("Invalid email or password");
     }
 
     @Test
@@ -153,6 +154,6 @@ class AuthServiceTest {
         // When/Then
         assertThatThrownBy(() -> authService.login(loginRequest))
                 .isInstanceOf(InvalidCredentialsException.class)
-                .hasMessageContaining("Invalid credentials");
+                .hasMessageContaining("Invalid email or password");
     }
 }

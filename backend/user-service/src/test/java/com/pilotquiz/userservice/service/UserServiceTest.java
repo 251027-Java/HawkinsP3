@@ -49,7 +49,7 @@ class UserServiceTest {
                 .email("test@example.com")
                 .firstName("John")
                 .lastName("Doe")
-                .role(User.Role.USER)
+                .role(User.Role.ROLE_USER)
                 .build();
 
         testProfile = PilotProfile.builder()
@@ -75,7 +75,7 @@ class UserServiceTest {
         assertThat(profile).isNotNull();
         assertThat(profile.getEmail()).isEqualTo("test@example.com");
         assertThat(profile.getFirstName()).isEqualTo("John");
-        assertThat(profile.getCurrentRating()).isEqualTo("PRIVATE");
+        assertThat(profile.getCurrentRating()).isEqualTo(PilotProfile.Rating.PRIVATE);
     }
 
     @Test
@@ -97,8 +97,8 @@ class UserServiceTest {
         UserProfileDTO updateDTO = UserProfileDTO.builder()
                 .firstName("Jane")
                 .lastName("Smith")
-                .currentRating("INSTRUMENT")
-                .targetRating("COMMERCIAL")
+                .currentRating(PilotProfile.Rating.INSTRUMENT)
+                .targetRating(PilotProfile.Rating.COMMERCIAL)
                 .flightHours(200)
                 .build();
 
@@ -106,7 +106,7 @@ class UserServiceTest {
         when(pilotProfileRepository.findByUserId(anyLong())).thenReturn(Optional.of(testProfile));
         when(userRepository.save(any(User.class))).thenReturn(testUser);
         when(pilotProfileRepository.save(any(PilotProfile.class))).thenReturn(testProfile);
-        doNothing().when(kafkaProducerService).sendProfileUpdatedEvent(any(User.class));
+        doNothing().when(kafkaProducerService).sendProfileUpdatedEvent(anyLong());
 
         // When
         UserProfileDTO result = userService.updateProfile(1L, updateDTO);
@@ -115,6 +115,6 @@ class UserServiceTest {
         assertThat(result).isNotNull();
         verify(userRepository).save(any(User.class));
         verify(pilotProfileRepository).save(any(PilotProfile.class));
-        verify(kafkaProducerService).sendProfileUpdatedEvent(any(User.class));
+        verify(kafkaProducerService).sendProfileUpdatedEvent(anyLong());
     }
 }

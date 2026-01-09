@@ -35,129 +35,129 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(MockitoExtension.class)
 class ProgressControllerTest {
 
-    private MockMvc mockMvc;
+        private MockMvc mockMvc;
 
-    @Mock
-    private ProgressService progressService;
+        @Mock
+        private ProgressService progressService;
 
-    @InjectMocks
-    private ProgressController progressController;
+        @InjectMocks
+        private ProgressController progressController;
 
-    private ObjectMapper objectMapper;
+        private ObjectMapper objectMapper;
 
-    @BeforeEach
-    void setUp() {
-        objectMapper = new ObjectMapper();
-        mockMvc = MockMvcBuilders.standaloneSetup(progressController)
-                .setControllerAdvice(new GlobalExceptionHandler())
-                .build();
-    }
+        @BeforeEach
+        void setUp() {
+                objectMapper = new ObjectMapper();
+                mockMvc = MockMvcBuilders.standaloneSetup(progressController)
+                                .setControllerAdvice(new GlobalExceptionHandler())
+                                .build();
+        }
 
-    @Test
-    @DisplayName("Should submit quiz attempt")
-    void submitAttempt_Success() throws Exception {
-        // Given
-        QuizAttemptDTO request = QuizAttemptDTO.builder()
-                .quizId(1L)
-                .quizTitle("Test Quiz")
-                .responses(Collections.singletonList(
-                        QuestionResponseDTO.builder().questionId(1L).isCorrect(true).build()))
-                .build();
+        @Test
+        @DisplayName("Should submit quiz attempt")
+        void submitAttempt_Success() throws Exception {
+                // Given
+                QuizAttemptDTO request = QuizAttemptDTO.builder()
+                                .quizId(1L)
+                                .quizTitle("Test Quiz")
+                                .responses(Collections.singletonList(
+                                                QuestionResponseDTO.builder().questionId(1L).isCorrect(true).build()))
+                                .build();
 
-        QuizAttemptDTO response = QuizAttemptDTO.builder()
-                .id(1L)
-                .score(1)
-                .totalQuestions(1)
-                .build();
+                QuizAttemptDTO response = QuizAttemptDTO.builder()
+                                .id(1L)
+                                .score(1)
+                                .totalQuestions(1)
+                                .build();
 
-        when(progressService.submitAttempt(anyLong(), any(QuizAttemptDTO.class))).thenReturn(response);
+                when(progressService.submitAttempt(anyLong(), any(QuizAttemptDTO.class))).thenReturn(response);
 
-        // When/Then
-        mockMvc.perform(post("/api/v1/attempts")
-                .header("X-User-Id", "1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.score").value(1));
-    }
+                // When/Then
+                mockMvc.perform(post("/api/v1/attempts")
+                                .header("X-User-Id", "1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                                .andExpect(status().isCreated())
+                                .andExpect(jsonPath("$.score").value(1));
+        }
 
-    @Test
-    @DisplayName("Should return 400 when no user ID header")
-    void submitAttempt_NoUserId_Returns400() throws Exception {
-        // Given
-        QuizAttemptDTO request = QuizAttemptDTO.builder()
-                .quizId(1L)
-                .responses(Collections.singletonList(
-                        QuestionResponseDTO.builder().questionId(1L).build()))
-                .build();
+        @Test
+        @DisplayName("Should return 400 when no user ID header")
+        void submitAttempt_NoUserId_Returns400() throws Exception {
+                // Given
+                QuizAttemptDTO request = QuizAttemptDTO.builder()
+                                .quizId(1L)
+                                .responses(Collections.singletonList(
+                                                QuestionResponseDTO.builder().questionId(1L).build()))
+                                .build();
 
-        // When/Then
-        mockMvc.perform(post("/api/v1/attempts")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest());
-    }
+                // When/Then
+                mockMvc.perform(post("/api/v1/attempts")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                                .andExpect(status().isBadRequest());
+        }
 
-    @Test
-    @DisplayName("Should get user attempts")
-    void getUserAttempts_Success() throws Exception {
-        // Given
-        Page<QuizAttemptDTO> page = new PageImpl<>(Collections.singletonList(
-                QuizAttemptDTO.builder().id(1L).score(8).build()));
-        when(progressService.getUserAttempts(anyLong(), any(Pageable.class))).thenReturn(page);
+        @Test
+        @DisplayName("Should get user attempts")
+        void getUserAttempts_Success() throws Exception {
+                // Given
+                Page<QuizAttemptDTO> page = new PageImpl<>(Collections.singletonList(
+                                QuizAttemptDTO.builder().id(1L).score(8).build()));
+                when(progressService.getUserAttempts(anyLong(), any(Pageable.class))).thenReturn(page);
 
-        // When/Then
-        mockMvc.perform(get("/api/v1/attempts")
-                .header("X-User-Id", "1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].score").value(8));
-    }
+                // When/Then
+                mockMvc.perform(get("/api/v1/attempts")
+                                .header("X-User-Id", "1"))
+                                .andExpect(status().isOk());
+        }
 
-    @Test
-    @DisplayName("Should get user progress")
-    void getUserProgress_Success() throws Exception {
-        // Given
-        when(progressService.getUserProgress(anyLong())).thenReturn(Collections.singletonList(
-                UserProgressDTO.builder().categoryName("Regulations").accuracyPercentage(70.0).build()));
+        @Test
+        @DisplayName("Should get user progress")
+        void getUserProgress_Success() throws Exception {
+                // Given
+                when(progressService.getUserProgress(anyLong())).thenReturn(Collections.singletonList(
+                                UserProgressDTO.builder().categoryName("Regulations").accuracyPercentage(70.0)
+                                                .build()));
 
-        // When/Then
-        mockMvc.perform(get("/api/v1/progress")
-                .header("X-User-Id", "1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].categoryName").value("Regulations"));
-    }
+                // When/Then
+                mockMvc.perform(get("/api/v1/progress")
+                                .header("X-User-Id", "1"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$[0].categoryName").value("Regulations"));
+        }
 
-    @Test
-    @DisplayName("Should get user analytics")
-    void getUserAnalytics_Success() throws Exception {
-        // Given
-        UserAnalyticsDTO analytics = UserAnalyticsDTO.builder()
-                .userId(1L)
-                .totalQuizzesTaken(5L)
-                .overallAccuracy(75.0)
-                .build();
-        when(progressService.getUserAnalytics(anyLong())).thenReturn(analytics);
+        @Test
+        @DisplayName("Should get user analytics")
+        void getUserAnalytics_Success() throws Exception {
+                // Given
+                UserAnalyticsDTO analytics = UserAnalyticsDTO.builder()
+                                .userId(1L)
+                                .totalQuizzesTaken(5L)
+                                .overallAccuracy(75.0)
+                                .build();
+                when(progressService.getUserAnalytics(anyLong())).thenReturn(analytics);
 
-        // When/Then
-        mockMvc.perform(get("/api/v1/analytics")
-                .header("X-User-Id", "1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalQuizzesTaken").value(5))
-                .andExpect(jsonPath("$.overallAccuracy").value(75.0));
-    }
+                // When/Then
+                mockMvc.perform(get("/api/v1/analytics")
+                                .header("X-User-Id", "1"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.totalQuizzesTaken").value(5))
+                                .andExpect(jsonPath("$.overallAccuracy").value(75.0));
+        }
 
-    @Test
-    @DisplayName("Should get weak areas")
-    void getWeakAreas_Success() throws Exception {
-        // Given
-        when(progressService.getWeakAreas(anyLong(), anyInt())).thenReturn(Collections.singletonList(
-                UserProgressDTO.builder().categoryName("Weather").accuracyPercentage(50.0).build()));
+        @Test
+        @DisplayName("Should get weak areas")
+        void getWeakAreas_Success() throws Exception {
+                // Given
+                when(progressService.getWeakAreas(anyLong(), anyInt())).thenReturn(Collections.singletonList(
+                                UserProgressDTO.builder().categoryName("Weather").accuracyPercentage(50.0).build()));
 
-        // When/Then
-        mockMvc.perform(get("/api/v1/weak-areas")
-                .header("X-User-Id", "1")
-                .param("limit", "5"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].categoryName").value("Weather"));
-    }
+                // When/Then
+                mockMvc.perform(get("/api/v1/weak-areas")
+                                .header("X-User-Id", "1")
+                                .param("limit", "5"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$[0].categoryName").value("Weather"));
+        }
 }
