@@ -20,6 +20,12 @@ RESULTS_DIR="$PROJECT_ROOT/test-results"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 RUN_DIR="$RESULTS_DIR/$TIMESTAMP"
 
+# Enforce Java 21
+export JAVA_HOME="/c/Program Files/Java/jdk-21"
+export PATH="$JAVA_HOME/bin:$PATH"
+echo "Using Java from: $JAVA_HOME"
+java -version
+
 # Services to test
 SERVICES=("user-service" "quiz-service" "progress-service")
 
