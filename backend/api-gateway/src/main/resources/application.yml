@@ -31,7 +31,7 @@ spring:
         - id: progress-service
           uri: lb://progress-service
           predicates:
-            - Path=/api/v1/attempts/**, /api/v1/progress/**, /api/v1/achievements/**, /api/v1/analytics/**
+            - Path=/api/v1/attempts/**, /api/v1/progress/**, /api/v1/achievements/**, /api/v1/analytics/**, /api/v1/weak-areas/**
           filters:
             - RewritePath=/api/v1/(?<segment>.*), /api/v1/${segment}
 

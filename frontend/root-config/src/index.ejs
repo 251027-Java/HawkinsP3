@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Pilot Quiz - Aviation Rating Exam Prep</title>
+  <meta name="description" content="Practice quiz platform for pilots preparing for FAA rating exams">
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self' https: localhost:*; script-src 'unsafe-inline' 'unsafe-eval' https: localhost:*; connect-src https: localhost:* ws://localhost:*; style-src 'unsafe-inline' https:; object-src 'none'; font-src https: data:;">
+
+  <!-- Google Fonts - Inter for modern typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Base styles for the shell -->
+  <style>
+    :root {
+      /* Light theme */
+      --color-primary: #3b82f6;
+      --color-primary-dark: #2563eb;
+      --color-secondary: #10b981;
+      --color-background: #f8fafc;
+      --color-surface: #ffffff;
+      --color-text: #1e293b;
+      --color-text-secondary: #64748b;
+      --color-border: #e2e8f0;
+      --color-error: #ef4444;
+      --color-warning: #f59e0b;
+      --color-success: #22c55e;
+      --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --border-radius: 8px;
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+    }
+
+    [data-theme="dark"] {
+      --color-background: #0f172a;
+      --color-surface: #1e293b;
+      --color-text: #f1f5f9;
+      --color-text-secondary: #94a3b8;
+      --color-border: #334155;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      height: 100%;
+      font-family: var(--font-family);
+      background-color: var(--color-background);
+      color: var(--color-text);
+      line-height: 1.6;
+    }
+
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background-color: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .main-content {
+      min-height: calc(100vh - 64px);
+      padding: 24px;
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    /* Loading state for MFEs */
+    .mfe-loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 200px;
+      color: var(--color-text-secondary);
+    }
+
+    .mfe-loading::after {
+      content: 'Loading...';
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.5;
+      }
+    }
+  </style>
+
+  <!-- Zone.js required for Angular MFE -->
+  <script src="https://cdn.jsdelivr.net/npm/zone.js@0.14.3/bundles/zone.umd.min.js"></script>
+
+  <!-- SystemJS for loading all modules (React and Angular MFEs) -->
+  <script src="https://cdn.jsdelivr.net/npm/systemjs@6.15.1/dist/system.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/systemjs@6.15.1/dist/extras/amd.min.js"></script>
+
+  <!-- SystemJS Import Map - Shared dependencies -->
+  <script type="systemjs-importmap">
+    {
+      "imports": {
+        "single-spa": "https://cdn.jsdelivr.net/npm/single-spa@6.0.3/lib/es2015/system/single-spa.min.js",
+        "single-spa-layout": "https://cdn.jsdelivr.net/npm/single-spa-layout@2.2.0/dist/esm/single-spa-layout.min.js",
+        "react": "https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js",
+        "react-dom": "https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js",
+        "react-dom/client": "https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js",
+        "react-router-dom": "https://cdn.jsdelivr.net/npm/react-router-dom@6.28.0/dist/umd/react-router-dom.production.min.js"
+      }
+    }
+  </script>
+
+  <!-- SystemJS Import Map - MFE applications -->
+  <script type="systemjs-importmap">
+    {
+      "imports": {
+        "@pilotquiz/root-config": "//localhost:9000/pilotquiz-root-config.js",
+        "@pilotquiz/react-auth": "//localhost:8080/pilotquiz-react-auth.js",
+        "@pilotquiz/angular-quiz": "//localhost:8081/main.js"
+      }
+    }
+  </script>
+
+  <!-- Import map overrides for development -->
+  <script src="https://cdn.jsdelivr.net/npm/import-map-overrides@3.1.1/dist/import-map-overrides.js"></script>
+</head>
+
+<body>
+  <noscript>
+    You need to enable JavaScript to run this app.
+  </noscript>
+  <main></main>
+  <script>
+    System.import('@pilotquiz/root-config');
+  </script>
+  <import-map-overrides-full show-when-local-storage="devtools" dev-libs></import-map-overrides-full>
+</body>
+
+</html>

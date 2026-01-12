@@ -1,5 +1,6 @@
 # Docker Compose for Local Development - Full Stack
 # Includes infrastructure AND backend services
+# Resource limits applied to prevent hardware overstress
 # For production, services connect to AWS RDS instead of local PostgreSQL
 
 services:
@@ -9,7 +10,7 @@ services:
 
   # PostgreSQL for User Service
   postgres-user:
-    image: postgres:15-alpine
+    image: postgres:alpine
     container_name: pilotquiz-postgres-user
     environment:
       POSTGRES_DB: userdb
@@ -21,6 +22,11 @@ services:
       - postgres_user_data:/var/lib/postgresql/data
     networks:
       - pilotquiz-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pilotquiz} -d userdb"]
       interval: 10s
@@ -29,7 +35,7 @@ services:
 
   # PostgreSQL for Quiz Service
   postgres-quiz:
-    image: postgres:15-alpine
+    image: postgres:alpine
     container_name: pilotquiz-postgres-quiz
     environment:
       POSTGRES_DB: quizdb
@@ -41,6 +47,11 @@ services:
       - postgres_quiz_data:/var/lib/postgresql/data
     networks:
       - pilotquiz-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pilotquiz} -d quizdb"]
       interval: 10s
@@ -49,7 +60,7 @@ services:
 
   # PostgreSQL for Progress Service
   postgres-progress:
-    image: postgres:15-alpine
+    image: postgres:alpine
     container_name: pilotquiz-postgres-progress
     environment:
       POSTGRES_DB: progressdb
@@ -61,6 +72,11 @@ services:
       - postgres_progress_data:/var/lib/postgresql/data
     networks:
       - pilotquiz-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pilotquiz} -d progressdb"]
       interval: 10s
@@ -78,6 +94,11 @@ services:
       - "2181:2181"
     networks:
       - pilotquiz-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
 
   # Kafka for event-driven communication
   kafka:
@@ -98,6 +119,11 @@ services:
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
     networks:
       - pilotquiz-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
     healthcheck:
       test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
       interval: 10s
@@ -118,6 +144,11 @@ services:
       - "8761:8761"
     networks:
       - pilotquiz-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 384M
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:8761/actuator/health"]
       interval: 30s
@@ -140,6 +171,11 @@ services:
         condition: service_healthy
     networks:
       - pilotquiz-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 384M
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:8888/actuator/health"]
       interval: 30s
@@ -155,15 +191,11 @@ services:
     ports:
       - "8001:8001"
     environment:
-      # Database - for production, these would point to AWS RDS
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-user:5432/userdb
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-pilotquiz}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-pilotquiz123}
-      # Eureka
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
-      # Kafka
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      # JWT
       JWT_SECRET: ${JWT_SECRET:-your-256-bit-secret-key-for-jwt-signing-min-32-chars}
       JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
     depends_on:
@@ -175,6 +207,11 @@ services:
         condition: service_healthy
     networks:
       - pilotquiz-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.75'
+          memory: 512M
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:8001/actuator/health"]
       interval: 30s
@@ -190,13 +227,10 @@ services:
     ports:
       - "8002:8002"
     environment:
-      # Database - for production, these would point to AWS RDS
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-quiz:5432/quizdb
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-pilotquiz}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-pilotquiz123}
-      # Eureka
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
-      # Kafka
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
     depends_on:
       eureka-server:
@@ -207,6 +241,11 @@ services:
         condition: service_healthy
     networks:
       - pilotquiz-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.75'
+          memory: 512M
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:8002/actuator/health"]
       interval: 30s
@@ -222,13 +261,10 @@ services:
     ports:
       - "8003:8003"
     environment:
-      # Database - for production, these would point to AWS RDS
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-progress:5432/progressdb
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-pilotquiz}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-pilotquiz123}
-      # Eureka
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
-      # Kafka
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
     depends_on:
       eureka-server:
@@ -239,11 +275,92 @@ services:
         condition: service_healthy
     networks:
       - pilotquiz-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.75'
+          memory: 512M
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:8003/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
+
+  # ===========================================
+  # FRONTEND SERVICES
+  # ===========================================
+
+  # React Authentication MFE
+  mfe-react-auth:
+    build:
+      context: ../frontend/mfe-react-auth
+      dockerfile: Dockerfile
+    container_name: pilotquiz-mfe-react-auth
+    ports:
+      - "8080:8080"
+    depends_on:
+      api-gateway:
+        condition: service_healthy
+    networks:
+      - pilotquiz-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 64M
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/pilotquiz-react-auth.js"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Angular Quiz MFE
+  mfe-angular-quiz:
+    build:
+      context: ../frontend/mfe-angular-quiz
+      dockerfile: Dockerfile
+    container_name: pilotquiz-mfe-angular-quiz
+    ports:
+      - "8081:8081"
+    depends_on:
+      api-gateway:
+        condition: service_healthy
+    networks:
+      - pilotquiz-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 64M
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8081/main.js"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Single-SPA Root Config - Main shell application
+  root-config:
+    build:
+      context: ../frontend/root-config
+      dockerfile: Dockerfile
+    container_name: pilotquiz-root-config
+    ports:
+      - "9000:9000"
+    depends_on:
+      - mfe-react-auth
+      - mfe-angular-quiz
+    networks:
+      - pilotquiz-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 64M
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 volumes:
   postgres_user_data:

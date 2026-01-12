@@ -1,0 +1,113 @@
+.navbar {
+  background: linear-gradient(135deg, var(--color-surface, #ffffff) 0%, var(--color-background, #f8fafc) 100%);
+  border-bottom: 1px solid var(--color-border, #e2e8f0);
+  padding: 0 24px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+}
+
+.navbar-container {
+  max-width: 1280px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: var(--color-text, #1e293b);
+  font-weight: 700;
+  font-size: 1.25rem;
+  transition: opacity 0.2s;
+}
+
+.navbar-brand:hover {
+  opacity: 0.8;
+}
+
+.brand-icon {
+  font-size: 1.5rem;
+}
+
+.brand-text {
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.navbar-links {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-link {
+  padding: 8px 16px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--color-text-secondary, #64748b);
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.nav-link:hover {
+  background-color: var(--color-border, #e2e8f0);
+  color: var(--color-text, #1e293b);
+}
+
+.nav-link-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white !important;
+}
+
+.nav-link-primary:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.navbar-user {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.user-greeting {
+  font-size: 0.9rem;
+  color: var(--color-text-secondary, #64748b);
+}
+
+.logout-btn {
+  padding: 8px 16px;
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-text-secondary, #64748b);
+  font-weight: 500;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.logout-btn:hover {
+  border-color: var(--color-error, #ef4444);
+  color: var(--color-error, #ef4444);
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+/* Dark mode support */
+[data-theme="dark"] .navbar {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+}
+
+[data-theme="dark"] .nav-link:hover {
+  background-color: #334155;
+}
