@@ -4,10 +4,10 @@ import { RouterLink } from '@angular/router';
 import { ApiService, Quiz } from '../services/api.service';
 
 @Component({
-    selector: 'app-quiz-list',
-    standalone: true,
-    imports: [CommonModule, RouterLink],
-    template: `
+  selector: 'app-quiz-list',
+  standalone: true,
+  imports: [CommonModule, RouterLink],
+  template: `
     <div class="quiz-list-container">
       <div class="header">
         <h1>Available Quizzes</h1>
@@ -39,16 +39,16 @@ import { ApiService, Quiz } from '../services/api.service';
         @for (quiz of quizzes(); track quiz.id) {
           <div class="quiz-card">
             <div class="quiz-header">
-              <span class="category-badge">{{ quiz.categoryName }}</span>
-              <span class="difficulty-badge" [class]="quiz.difficultyLevel.toLowerCase()">
-                {{ quiz.difficultyLevel }}
+              <span class="category-badge">{{ quiz.categoryName || 'General' }}</span>
+              <span class="difficulty-badge" [class]="quiz.ratingType?.toLowerCase() || 'private'">
+                {{ quiz.ratingType || 'PRIVATE' }}
               </span>
             </div>
             <h3>{{ quiz.title }}</h3>
             <p class="description">{{ quiz.description }}</p>
             <div class="quiz-meta">
-              <span>📝 {{ quiz.questionCount }} questions</span>
-              <span>⏱️ {{ quiz.timeLimit }} min</span>
+              <span>📝 {{ quiz.questionCount || 0 }} questions</span>
+              <span>⏱️ {{ quiz.timeLimitMinutes || quiz.timeLimit || 15 }} min</span>
             </div>
             <a [routerLink]="['/quizzes', quiz.id]" class="start-btn">
               Start Quiz →
@@ -58,7 +58,7 @@ import { ApiService, Quiz } from '../services/api.service';
       </div>
     </div>
   `,
-    styles: [`
+  styles: [`
     .quiz-list-container {
       max-width: 1200px;
       margin: 0 auto;
@@ -221,29 +221,29 @@ import { ApiService, Quiz } from '../services/api.service';
   `]
 })
 export class QuizListComponent implements OnInit {
-    quizzes = signal<Quiz[]>([]);
-    loading = signal(true);
-    error = signal('');
+  quizzes = signal<Quiz[]>([]);
+  loading = signal(true);
+  error = signal('');
 
-    constructor(private api: ApiService) { }
+  constructor(private api: ApiService) { }
 
-    ngOnInit(): void {
-        this.loadQuizzes();
-    }
+  ngOnInit(): void {
+    this.loadQuizzes();
+  }
 
-    loadQuizzes(): void {
-        this.loading.set(true);
-        this.error.set('');
+  loadQuizzes(): void {
+    this.loading.set(true);
+    this.error.set('');
 
-        this.api.getQuizzes().subscribe({
-            next: (data) => {
-                this.quizzes.set(data);
-                this.loading.set(false);
-            },
-            error: (err) => {
-                this.error.set('Failed to load quizzes. Please try again.');
-                this.loading.set(false);
-            }
-        });
-    }
+    this.api.getQuizzes().subscribe({
+      next: (data) => {
+        this.quizzes.set(data);
+        this.loading.set(false);
+      },
+      error: (err) => {
+        this.error.set('Failed to load quizzes. Please try again.');
+        this.loading.set(false);
+      }
+    });
+  }
 }

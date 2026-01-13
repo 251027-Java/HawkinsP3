@@ -13,6 +13,7 @@ import com.pilotquiz.quizservice.entity.Question;
 import com.pilotquiz.quizservice.exception.ResourceNotFoundException;
 import com.pilotquiz.quizservice.repository.CategoryRepository;
 import com.pilotquiz.quizservice.repository.QuestionRepository;
+import com.pilotquiz.quizservice.repository.QuizQuestionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -37,6 +38,7 @@ public class QuestionService {
     private final QuestionRepository questionRepository;
     private final CategoryRepository categoryRepository;
     private final CategoryService categoryService;
+    private final QuizQuestionRepository quizQuestionRepository;
 
     /**
      * Get all questions with pagination.
@@ -44,6 +46,19 @@ public class QuestionService {
     public Page<QuestionDTO> getAllQuestions(Pageable pageable) {
         return questionRepository.findAll(pageable).map(this::toDTO);
     }
+
+    // ... (Keep existing methods until deleteQuestion)
+    // IMPORTANT: I need to be careful not to delete the intervening methods if I
+    // use a large range.
+    // I will target the class field injection and then the deleteQuestion method
+    // separately use multi_replace.
+    // Actually, I can't use multi_replace for separate blocks easily if the
+    // instructions are complex.
+    // I'll do two replace calls.
+    // WAIT: I can just add the field at the top and update the method at the
+    // bottom.
+    // But `replace_file_content` is single contiguous block.
+    // I'll use `multi_replace_file_content` for this.
 
     /**
      * Get questions by rating type.
@@ -132,6 +147,8 @@ public class QuestionService {
         if (!questionRepository.existsById(id)) {
             throw new ResourceNotFoundException("Question not found: " + id);
         }
+        // Remove from quizzes first
+        quizQuestionRepository.deleteByQuestionId(id);
         questionRepository.deleteById(id);
     }
 
@@ -282,6 +299,9 @@ public class QuestionService {
                 .map(Category::getId)
                 .collect(Collectors.toList());
 
+        String categoryName = question.getCategories().isEmpty() ? null
+                : question.getCategories().iterator().next().getName();
+
         return QuestionDTO.builder()
                 .id(question.getId())
                 .questionText(question.getQuestionText())
@@ -290,6 +310,7 @@ public class QuestionService {
                 .ratingType(question.getRatingType())
                 .answers(answerDTOs)
                 .categoryIds(categoryIds)
+                .categoryName(categoryName)
                 .build();
     }
 
@@ -311,12 +332,15 @@ public class QuestionService {
             }
         }
 
-        if (dto.getCategoryIds() != null) {
+        if (dto.getCategoryIds() != null && !dto.getCategoryIds().isEmpty()) {
             Set<Category> categories = dto.getCategoryIds().stream()
                     .map(id -> categoryRepository.findById(id)
                             .orElseThrow(() -> new ResourceNotFoundException("Category not found: " + id)))
                     .collect(Collectors.toSet());
             question.setCategories(categories);
+        } else if (dto.getCategoryName() != null && !dto.getCategoryName().isEmpty()) {
+            Category category = categoryService.findOrCreateByName(dto.getCategoryName());
+            question.setCategories(new HashSet<>(Collections.singletonList(category)));
         }
 
         return question;

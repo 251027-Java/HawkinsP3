@@ -54,16 +54,41 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setIsLoading(false);
     }, []);
 
-    // Listen for logout events from other MFEs
+    // Listen for auth events from other MFEs (and other instances of this MFE)
     useEffect(() => {
-        const handleLogout = () => logout();
+        const handleLogin = (event: Event) => {
+            const customEvent = event as CustomEvent;
+            const userData = customEvent.detail;
+            const storedToken = localStorage.getItem('pilotquiz_token');
+            setToken(storedToken);
+            setUser(userData);
+        };
+
+        const handleLogout = () => {
+            setToken(null);
+            setUser(null);
+        };
+
+        window.addEventListener('pilotquiz:login', handleLogin);
         window.addEventListener('pilotquiz:logout', handleLogout);
-        return () => window.removeEventListener('pilotquiz:logout', handleLogout);
+
+        return () => {
+            window.removeEventListener('pilotquiz:login', handleLogin);
+            window.removeEventListener('pilotquiz:logout', handleLogout);
+        };
     }, []);
 
     const login = async (email: string, password: string) => {
         const response = await authApi.login(email, password);
-        const { token: newToken, user: userData } = response;
+        // Backend returns flat structure: { token, email, firstName, lastName, role, userId }
+        const newToken = response.token;
+        const userData = {
+            id: response.userId,
+            email: response.email,
+            firstName: response.firstName,
+            lastName: response.lastName,
+            role: response.role
+        };
 
         localStorage.setItem('pilotquiz_token', newToken);
         localStorage.setItem('pilotquiz_user', JSON.stringify(userData));
@@ -77,7 +102,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     const register = async (data: RegisterData) => {
         const response = await authApi.register(data);
-        const { token: newToken, user: userData } = response;
+        const newToken = response.token;
+        const userData = {
+            id: response.userId,
+            email: response.email,
+            firstName: response.firstName,
+            lastName: response.lastName,
+            role: response.role
+        };
 
         localStorage.setItem('pilotquiz_token', newToken);
         localStorage.setItem('pilotquiz_user', JSON.stringify(userData));

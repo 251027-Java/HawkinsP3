@@ -30,6 +30,11 @@ const Navbar: React.FC = () => {
                             <a href="/dashboard" onClick={handleNavigation('/dashboard')} className="nav-link">Dashboard</a>
                             <a href="/quizzes" onClick={handleNavigation('/quizzes')} className="nav-link">Quizzes</a>
                             <a href="/progress" onClick={handleNavigation('/progress')} className="nav-link">Progress</a>
+                            {user?.role === 'ROLE_ADMIN' && (
+                                <a href="/admin/quizzes" onClick={handleNavigation('/admin/quizzes')} className="nav-link admin-link">
+                                    Admin
+                                </a>
+                            )}
                         </>
                     ) : (
                         <>
@@ -55,4 +60,5 @@ const Navbar: React.FC = () => {
 };
 
 export default Navbar;
+
 

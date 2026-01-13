@@ -3,10 +3,10 @@ import { CommonModule } from '@angular/common';
 import { ApiService, ProgressData, WeakArea } from '../services/api.service';
 
 @Component({
-    selector: 'app-progress',
-    standalone: true,
-    imports: [CommonModule],
-    template: `
+  selector: 'app-progress',
+  standalone: true,
+  imports: [CommonModule],
+  template: `
     <div class="progress-container">
       <div class="header">
         <h1>Your Progress</h1>
@@ -94,7 +94,7 @@ import { ApiService, ProgressData, WeakArea } from '../services/api.service';
       }
     </div>
   `,
-    styles: [`
+  styles: [`
     .progress-container {
       max-width: 1000px;
       margin: 0 auto;
@@ -316,42 +316,89 @@ import { ApiService, ProgressData, WeakArea } from '../services/api.service';
   `]
 })
 export class ProgressComponent implements OnInit {
-    progress = signal<ProgressData | null>(null);
-    weakAreas = signal<WeakArea[]>([]);
-    loading = signal(true);
-    error = signal('');
+  progress = signal<ProgressData | null>(null);
+  weakAreas = signal<WeakArea[]>([]);
+  loading = signal(true);
+  error = signal('');
 
-    constructor(private api: ApiService) { }
+  constructor(private api: ApiService) { }
 
-    ngOnInit(): void {
-        this.loadProgress();
-    }
+  ngOnInit(): void {
+    this.loadProgress();
+  }
 
-    loadProgress(): void {
-        this.loading.set(true);
-        this.error.set('');
+  loadProgress(): void {
+    this.loading.set(true);
+    this.error.set('');
 
+    // First load analytics for aggregate stats
+    this.api.getUserAnalytics().subscribe({
+      next: (analytics) => {
+        console.log('Analytics data:', analytics);
+
+        // Then load category progress
         this.api.getUserProgress().subscribe({
-            next: (data) => {
-                this.progress.set(data);
-                this.loadWeakAreas();
-            },
-            error: () => {
-                this.error.set('Failed to load progress');
-                this.loading.set(false);
-            }
-        });
-    }
+          next: (categoryData: any) => {
+            console.log('Category progress data:', categoryData);
 
-    loadWeakAreas(): void {
-        this.api.getWeakAreas().subscribe({
-            next: (areas) => {
-                this.weakAreas.set(areas);
-                this.loading.set(false);
-            },
-            error: () => {
-                this.loading.set(false);
+            // Handle different response formats
+            let categoryProgress: any[] = [];
+            if (Array.isArray(categoryData)) {
+              categoryProgress = categoryData.map((cat: any) => ({
+                categoryName: cat.categoryName || 'Unknown',
+                accuracy: cat.accuracyPercentage || 0,
+                questionCount: cat.totalAttempts || 0
+              }));
             }
+
+            const progressData: ProgressData = {
+              totalQuizzesTaken: analytics?.totalQuizzesTaken || 0,
+              totalQuestionsAttempted: analytics?.totalQuestionsAttempted || 0,
+              overallAccuracy: analytics?.overallAccuracy || 0,
+              categoryProgress: categoryProgress
+            };
+
+            this.progress.set(progressData);
+            this.loadWeakAreas();
+          },
+          error: (err) => {
+            console.error('Failed to load category progress:', err);
+            // Still show analytics even if category progress fails
+            const progressData: ProgressData = {
+              totalQuizzesTaken: analytics?.totalQuizzesTaken || 0,
+              totalQuestionsAttempted: analytics?.totalQuestionsAttempted || 0,
+              overallAccuracy: analytics?.overallAccuracy || 0,
+              categoryProgress: []
+            };
+            this.progress.set(progressData);
+            this.loading.set(false);
+          }
         });
-    }
+      },
+      error: (err) => {
+        console.error('Failed to load analytics:', err);
+        this.error.set('Failed to load progress');
+        this.loading.set(false);
+      }
+    });
+  }
+
+  loadWeakAreas(): void {
+    this.api.getWeakAreas().subscribe({
+      next: (areas: any[]) => {
+        console.log('Weak areas data:', areas);
+        // Map to frontend WeakArea format
+        const mappedAreas = (areas || []).map((area: any) => ({
+          categoryName: area.categoryName || 'Unknown',
+          accuracyPercentage: area.accuracyPercentage || 0,
+          questionsAttempted: area.totalAttempts || 0
+        }));
+        this.weakAreas.set(mappedAreas);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.loading.set(false);
+      }
+    });
+  }
 }

@@ -152,4 +152,64 @@ public class QuizService {
                 .questionCount(questions.size())
                 .build();
     }
+
+    /**
+     * Get all questions for a specific quiz.
+     */
+    public List<QuestionDTO> getQuizQuestions(Long quizId) {
+        return getQuizById(quizId).getQuestions();
+    }
+
+    /**
+     * Add a new question to a specific quiz.
+     */
+    @Transactional
+    public QuestionDTO addQuestionToQuiz(Long quizId, QuestionDTO questionDTO) {
+        Quiz quiz = quizRepository.findById(quizId)
+                .orElseThrow(() -> new ResourceNotFoundException("Quiz not found: " + quizId));
+
+        // Create the question first
+        QuestionDTO createdQuestion = questionService.createQuestion(questionDTO);
+        Question question = questionRepository.findById(createdQuestion.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Question not found: " + createdQuestion.getId()));
+
+        // Add to quiz
+        quiz.addQuestion(question, quiz.getQuizQuestions().size() + 1);
+        quizRepository.save(quiz);
+
+        return createdQuestion;
+    }
+
+    /**
+     * Link an existing question to a quiz.
+     */
+    @Transactional
+    public void linkQuestionToQuiz(Long quizId, Long questionId) {
+        Quiz quiz = quizRepository.findById(quizId)
+                .orElseThrow(() -> new ResourceNotFoundException("Quiz not found: " + quizId));
+        Question question = questionRepository.findById(questionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Question not found: " + questionId));
+
+        // Check if already linked
+        boolean alreadyLinked = quiz.getQuizQuestions().stream()
+                .anyMatch(qq -> qq.getQuestion().getId().equals(questionId));
+        if (alreadyLinked) {
+            return; // Idempotent - don't add duplicates
+        }
+
+        quiz.addQuestion(question, quiz.getQuizQuestions().size() + 1);
+        quizRepository.save(quiz);
+    }
+
+    /**
+     * Unlink a question from a quiz (does not delete the question).
+     */
+    @Transactional
+    public void unlinkQuestionFromQuiz(Long quizId, Long questionId) {
+        Quiz quiz = quizRepository.findById(quizId)
+                .orElseThrow(() -> new ResourceNotFoundException("Quiz not found: " + quizId));
+
+        quiz.getQuizQuestions().removeIf(qq -> qq.getQuestion().getId().equals(questionId));
+        quizRepository.save(quiz);
+    }
 }

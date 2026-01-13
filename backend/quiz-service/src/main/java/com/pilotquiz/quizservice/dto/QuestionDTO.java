@@ -39,4 +39,6 @@ public class QuestionDTO {
     private List<AnswerDTO> answers;
 
     private List<Long> categoryIds;
+
+    private String categoryName; // Allow creating by name
 }

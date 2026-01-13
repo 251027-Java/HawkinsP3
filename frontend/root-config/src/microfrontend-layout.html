@@ -5,8 +5,13 @@
     - Angular MFE handles: Quiz routes (quizzes, progress)
   -->
 
+  <!-- Persistent Navbar (always visible) -->
+  <nav class="navbar-section">
+    <application name="@pilotquiz/navbar" props="navbarProps"></application>
+  </nav>
+
   <main class="main-content">
-    <!-- React Auth MFE - handles login, register, dashboard, and includes navbar -->
+    <!-- React Auth MFE - handles login, register, dashboard -->
     <route path="login">
       <application name="@pilotquiz/react-auth"></application>
     </route>
@@ -25,6 +30,9 @@
       <application name="@pilotquiz/angular-quiz"></application>
     </route>
     <route path="progress">
+      <application name="@pilotquiz/angular-quiz"></application>
+    </route>
+    <route path="admin">
       <application name="@pilotquiz/angular-quiz"></application>
     </route>
 

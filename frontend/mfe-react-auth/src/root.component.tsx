@@ -22,7 +22,19 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 };
 
 // Main App component
-const App: React.FC = () => {
+const App: React.FC<any> = (props) => {
+  // Navbar Mode - Renders only the persistent navigation bar
+  // The name '@pilotquiz/navbar' is defined in microfrontend-layout.html and mapped in root-config
+  if (props.name === '@pilotquiz/navbar') {
+    return (
+      <AuthProvider>
+        <div style={{ position: 'relative', zIndex: 100 }}>
+          <Navbar />
+        </div>
+      </AuthProvider>
+    );
+  }
+
   return (
     <AuthProvider>
       <AppContent />
@@ -53,33 +65,18 @@ const AppContent: React.FC = () => {
 
   return (
     <BrowserRouter>
-      <Navbar />
+      {/* Navbar is separate now */}
       <Routes>
-        <Route
-          path="/login"
-          element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />}
-        />
-        <Route
-          path="/register"
-          element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Register />}
-        />
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/"
-          element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />}
-        />
-        {/* Fallback for unknown routes */}
-        <Route
-          path="*"
-          element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />}
-        />
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+
+        {/* Protected Routes */}
+        <Route path="/dashboard" element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        } />
       </Routes>
     </BrowserRouter>
   );

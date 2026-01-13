@@ -2,6 +2,7 @@
 // Reviewed and modified by Richard Hawkins
 package com.pilotquiz.quizservice.controller;
 
+import com.pilotquiz.quizservice.dto.QuestionDTO;
 import com.pilotquiz.quizservice.dto.QuizDTO;
 import com.pilotquiz.quizservice.entity.Question;
 import com.pilotquiz.quizservice.service.QuizService;
@@ -14,6 +15,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * REST controller for quiz operations.
@@ -88,6 +91,57 @@ public class QuizController {
         }
 
         quizService.deleteQuiz(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/questions")
+    @Operation(summary = "Get all questions for a quiz")
+    public ResponseEntity<List<QuestionDTO>> getQuizQuestions(@PathVariable Long id) {
+        return ResponseEntity.ok(quizService.getQuizQuestions(id));
+    }
+
+    @PostMapping("/{id}/questions")
+    @Operation(summary = "Add a question to a quiz (Admin only)")
+    public ResponseEntity<QuestionDTO> addQuestionToQuiz(
+            @PathVariable Long id,
+            @Valid @RequestBody QuestionDTO questionDTO,
+            @RequestHeader(value = "X-User-Role", required = false) String role) {
+
+        if (!"ROLE_ADMIN".equals(role)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(quizService.addQuestionToQuiz(id, questionDTO));
+    }
+
+    @PostMapping("/{id}/questions/{questionId}")
+    @Operation(summary = "Link an existing question to a quiz (Admin only)")
+    public ResponseEntity<Void> linkQuestionToQuiz(
+            @PathVariable Long id,
+            @PathVariable Long questionId,
+            @RequestHeader(value = "X-User-Role", required = false) String role) {
+
+        if (!"ROLE_ADMIN".equals(role)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        quizService.linkQuestionToQuiz(id, questionId);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @DeleteMapping("/{id}/questions/{questionId}")
+    @Operation(summary = "Unlink a question from a quiz (Admin only)")
+    public ResponseEntity<Void> unlinkQuestionFromQuiz(
+            @PathVariable Long id,
+            @PathVariable Long questionId,
+            @RequestHeader(value = "X-User-Role", required = false) String role) {
+
+        if (!"ROLE_ADMIN".equals(role)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        quizService.unlinkQuestionFromQuiz(id, questionId);
         return ResponseEntity.noContent().build();
     }
 }
