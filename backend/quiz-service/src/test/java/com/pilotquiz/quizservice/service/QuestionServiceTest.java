@@ -10,6 +10,7 @@ import com.pilotquiz.quizservice.entity.Question;
 import com.pilotquiz.quizservice.exception.ResourceNotFoundException;
 import com.pilotquiz.quizservice.repository.CategoryRepository;
 import com.pilotquiz.quizservice.repository.QuestionRepository;
+import com.pilotquiz.quizservice.repository.QuizQuestionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -41,6 +42,9 @@ class QuestionServiceTest {
 
     @Mock
     private CategoryService categoryService;
+
+    @Mock
+    private QuizQuestionRepository quizQuestionRepository;
 
     @InjectMocks
     private QuestionService questionService;
@@ -144,12 +148,14 @@ class QuestionServiceTest {
     void deleteQuestion_Success() {
         // Given
         when(questionRepository.existsById(anyLong())).thenReturn(true);
+        doNothing().when(quizQuestionRepository).deleteByQuestionId(anyLong());
         doNothing().when(questionRepository).deleteById(anyLong());
 
         // When
         questionService.deleteQuestion(1L);
 
         // Then
+        verify(quizQuestionRepository).deleteByQuestionId(1L);
         verify(questionRepository).deleteById(1L);
     }
 
