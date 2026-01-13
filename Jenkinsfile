@@ -7,9 +7,16 @@
 pipeline {
     agent any
 
+    parameters {
+        string(
+            name: 'BRANCH',
+            defaultValue: '',
+            description: 'Branch to build (leave empty for webhook auto-detection)'
+        )
+    }
+
     environment {
         // Map of directory paths to pipeline job names
-        // Adjust job names to match your Jenkins job configuration
         EUREKA_JOB = 'pilotquiz-eureka-server'
         GATEWAY_JOB = 'pilotquiz-api-gateway'
         USER_JOB = 'pilotquiz-user-service'
@@ -24,6 +31,17 @@ pipeline {
         stage('Checkout') {
             steps {
                 checkout scm
+                script {
+                    // Determine branch: use parameter if provided, otherwise detect from checkout
+                    if (params.BRANCH?.trim()) {
+                        env.TARGET_BRANCH = params.BRANCH.trim()
+                        echo "Using parameter branch: ${env.TARGET_BRANCH}"
+                    } else {
+                        def detectedBranch = env.GIT_BRANCH?.replaceAll('origin/', '') ?: 'dev'
+                        env.TARGET_BRANCH = detectedBranch
+                        echo "Auto-detected branch: ${env.TARGET_BRANCH}"
+                    }
+                }
             }
         }
 
@@ -31,11 +49,9 @@ pipeline {
             steps {
                 script {
                     // Get the list of changed files between current and previous commit
-                    // For PRs, compare against the base branch
                     def changes = []
                     
                     try {
-                        // Get changed files from the last commit
                         changes = sh(
                             script: "git diff --name-only HEAD~1 HEAD || echo ''",
                             returnStdout: true
@@ -61,7 +77,8 @@ pipeline {
                     def infrastructureChanged = changes.any { 
                         it.startsWith('infrastructure/') || 
                         it.startsWith('jenkinsfiles/') ||
-                        it == 'docker-compose.yml'
+                        it == 'docker-compose.yml' ||
+                        it == 'Jenkinsfile'
                     }
 
                     if (infrastructureChanged) {
@@ -76,8 +93,8 @@ pipeline {
                         env.BUILD_ANGULAR_QUIZ = 'true'
                     }
 
-                    // Summary
                     echo """
+                    Branch: ${env.TARGET_BRANCH}
                     Services to build:
                     - Eureka Server: ${env.BUILD_EUREKA}
                     - API Gateway: ${env.BUILD_GATEWAY}
@@ -99,7 +116,9 @@ pipeline {
                         expression { env.BUILD_EUREKA == 'true' }
                     }
                     steps {
-                        build job: "${EUREKA_JOB}", wait: true, propagate: true
+                        build job: "${EUREKA_JOB}", 
+                              parameters: [string(name: 'BRANCH', value: env.TARGET_BRANCH)],
+                              wait: true, propagate: true
                     }
                 }
                 stage('API Gateway') {
@@ -107,7 +126,9 @@ pipeline {
                         expression { env.BUILD_GATEWAY == 'true' }
                     }
                     steps {
-                        build job: "${GATEWAY_JOB}", wait: true, propagate: true
+                        build job: "${GATEWAY_JOB}",
+                              parameters: [string(name: 'BRANCH', value: env.TARGET_BRANCH)],
+                              wait: true, propagate: true
                     }
                 }
                 stage('User Service') {
@@ -115,7 +136,9 @@ pipeline {
                         expression { env.BUILD_USER == 'true' }
                     }
                     steps {
-                        build job: "${USER_JOB}", wait: true, propagate: true
+                        build job: "${USER_JOB}",
+                              parameters: [string(name: 'BRANCH', value: env.TARGET_BRANCH)],
+                              wait: true, propagate: true
                     }
                 }
                 stage('Quiz Service') {
@@ -123,7 +146,9 @@ pipeline {
                         expression { env.BUILD_QUIZ == 'true' }
                     }
                     steps {
-                        build job: "${QUIZ_JOB}", wait: true, propagate: true
+                        build job: "${QUIZ_JOB}",
+                              parameters: [string(name: 'BRANCH', value: env.TARGET_BRANCH)],
+                              wait: true, propagate: true
                     }
                 }
                 stage('Progress Service') {
@@ -131,7 +156,9 @@ pipeline {
                         expression { env.BUILD_PROGRESS == 'true' }
                     }
                     steps {
-                        build job: "${PROGRESS_JOB}", wait: true, propagate: true
+                        build job: "${PROGRESS_JOB}",
+                              parameters: [string(name: 'BRANCH', value: env.TARGET_BRANCH)],
+                              wait: true, propagate: true
                     }
                 }
             }
@@ -144,7 +171,9 @@ pipeline {
                         expression { env.BUILD_ROOT_CONFIG == 'true' }
                     }
                     steps {
-                        build job: "${ROOT_CONFIG_JOB}", wait: true, propagate: true
+                        build job: "${ROOT_CONFIG_JOB}",
+                              parameters: [string(name: 'BRANCH', value: env.TARGET_BRANCH)],
+                              wait: true, propagate: true
                     }
                 }
                 stage('React Auth MFE') {
@@ -152,7 +181,9 @@ pipeline {
                         expression { env.BUILD_REACT_AUTH == 'true' }
                     }
                     steps {
-                        build job: "${REACT_AUTH_JOB}", wait: true, propagate: true
+                        build job: "${REACT_AUTH_JOB}",
+                              parameters: [string(name: 'BRANCH', value: env.TARGET_BRANCH)],
+                              wait: true, propagate: true
                     }
                 }
                 stage('Angular Quiz MFE') {
@@ -160,7 +191,9 @@ pipeline {
                         expression { env.BUILD_ANGULAR_QUIZ == 'true' }
                     }
                     steps {
-                        build job: "${ANGULAR_QUIZ_JOB}", wait: true, propagate: true
+                        build job: "${ANGULAR_QUIZ_JOB}",
+                              parameters: [string(name: 'BRANCH', value: env.TARGET_BRANCH)],
+                              wait: true, propagate: true
                     }
                 }
             }
@@ -169,7 +202,7 @@ pipeline {
 
     post {
         success {
-            echo 'All triggered builds completed successfully!'
+            echo "All triggered builds completed successfully for branch: ${env.TARGET_BRANCH}"
         }
         failure {
             echo 'One or more builds failed. Check individual job logs for details.'
