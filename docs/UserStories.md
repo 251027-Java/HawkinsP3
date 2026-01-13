@@ -65,11 +65,11 @@
 
 **Acceptance Criteria:**
 
-- [ ] User can see list of available quizzes
-- [ ] Quizzes can be filtered by rating type
-- [ ] Quizzes show title, description, and question count
+- [x] User can see list of available quizzes
+- [x] Quizzes can be filtered by rating type
+- [x] Quizzes show title, description, and question count
 
-**Status:** 🔲 Pending - Quiz Service
+**Status:** ✅ Implemented in Quiz Service + Angular MFE
 
 ---
 
@@ -81,13 +81,13 @@
 
 **Acceptance Criteria:**
 
-- [ ] User can start a quiz
-- [ ] Questions displayed one at a time
-- [ ] User can select an answer
-- [ ] User can navigate between questions
-- [ ] Quiz can be submitted
+- [x] User can start a quiz
+- [x] Questions displayed one at a time
+- [x] User can select an answer
+- [x] User can navigate between questions
+- [x] Quiz can be submitted
 
-**Status:** 🔲 Pending - Quiz Service + Angular MFE
+**Status:** ✅ Implemented in Quiz Service + Angular MFE (quiz-player component)
 
 ---
 
@@ -99,11 +99,11 @@
 
 **Acceptance Criteria:**
 
-- [ ] Score displayed after quiz completion
-- [ ] Each question shows correct answer
-- [ ] Explanation shown for each question
+- [x] Score displayed after quiz completion
+- [x] Each question shows correct answer
+- [x] Explanation shown for each question
 
-**Status:** 🔲 Pending - Progress Service + Angular MFE
+**Status:** ✅ Implemented in Progress Service + Angular MFE
 
 ---
 
@@ -115,11 +115,11 @@
 
 **Acceptance Criteria:**
 
-- [ ] User can select one or more categories
-- [ ] Questions filtered by selected categories
-- [ ] Random question selection from pool
+- [x] User can select one or more categories
+- [x] Questions filtered by selected categories
+- [x] Random question selection from pool
 
-**Status:** 🔲 Pending - Quiz Service
+**Status:** ✅ Implemented in Quiz Service
 
 ---
 
@@ -133,12 +133,12 @@
 
 **Acceptance Criteria:**
 
-- [ ] Admin can download CSV template
-- [ ] Admin can upload CSV file
-- [ ] Validation errors reported
-- [ ] Successfully imported count shown
+- [x] Admin can download CSV template
+- [x] Admin can upload CSV file
+- [x] Validation errors reported
+- [x] Successfully imported count shown
 
-**Status:** 🔲 Pending - Quiz Service
+**Status:** ✅ Implemented in Quiz Service (QuestionController /bulk and /template endpoints)
 
 ---
 
@@ -150,12 +150,12 @@
 
 **Acceptance Criteria:**
 
-- [ ] Admin can create new question with answers
-- [ ] Admin can edit existing question
-- [ ] Admin can delete question
-- [ ] Admin can assign categories to questions
+- [x] Admin can create new question with answers
+- [x] Admin can edit existing question
+- [x] Admin can delete question
+- [x] Admin can assign categories to questions
 
-**Status:** 🔲 Pending - Quiz Service
+**Status:** ✅ Implemented in Quiz Service + Angular MFE (admin components)
 
 ---
 
@@ -169,12 +169,12 @@
 
 **Acceptance Criteria:**
 
-- [ ] Display overall score percentage
-- [ ] Show progress by category
-- [ ] Show recent quiz attempts
-- [ ] Visual charts for progress
+- [x] Display overall score percentage
+- [x] Show progress by category
+- [x] Show recent quiz attempts
+- [x] Visual charts for progress
 
-**Status:** 🔲 Pending - Progress Service + React MFE
+**Status:** ✅ Implemented in Progress Service + Angular MFE (progress component)
 
 ---
 
@@ -186,11 +186,11 @@
 
 **Acceptance Criteria:**
 
-- [ ] Categories ranked by performance
-- [ ] Low-performing categories highlighted
+- [x] Categories ranked by performance
+- [x] Low-performing categories highlighted
 - [ ] Suggested quizzes for weak areas
 
-**Status:** 🔲 Pending - Progress Service
+**Status:** 🔄 Partially Implemented - Analytics endpoint exists, suggestion feature pending
 
 ---
 
