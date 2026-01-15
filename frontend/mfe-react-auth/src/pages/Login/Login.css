@@ -1,7 +1,7 @@
 .auth-page {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    min-height: calc(100vh - 64px);
+    height: 100%;
     gap: 0;
 }
 
@@ -82,7 +82,7 @@
 
 .submit-btn {
     padding: 14px 24px;
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    background: linear-gradient(135deg, var(--color-primary, #5d8fbd) 0%, var(--color-primary-dark, #4a7ba8) 100%);
     color: white;
     border: none;
     border-radius: 8px;
@@ -94,9 +94,9 @@
 }
 
 .submit-btn:hover:not(:disabled) {
-    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    background: linear-gradient(135deg, var(--color-primary-dark, #4a7ba8) 0%, #3d6a95 100%);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    box-shadow: 0 4px 12px rgba(93, 143, 189, 0.4);
 }
 
 .submit-btn:disabled {
@@ -120,9 +120,9 @@
     text-decoration: underline;
 }
 
-/* Decoration panel */
+/* Decoration panel - dark mode friendly gradient */
 .auth-decoration {
-    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%);
+    background: linear-gradient(135deg, #2d353f 0%, #3a4555 50%, #4a5568 100%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -157,6 +157,9 @@
 @media (max-width: 768px) {
     .auth-page {
         grid-template-columns: 1fr;
+        height: auto;
+        min-height: 100%;
+        overflow-y: auto;
     }
 
     .auth-decoration {

@@ -15,34 +15,74 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-  <!-- Base styles for the shell -->
   <style>
     :root {
-      /* Light theme */
-      --color-primary: #3b82f6;
-      --color-primary-dark: #2563eb;
-      --color-secondary: #10b981;
-      --color-background: #f8fafc;
-      --color-surface: #ffffff;
-      --color-text: #1e293b;
-      --color-text-secondary: #64748b;
-      --color-border: #e2e8f0;
-      --color-error: #ef4444;
-      --color-warning: #f59e0b;
-      --color-success: #22c55e;
+      /* Dark mode as default - softer, easier on the eyes */
+      --color-primary: #5d8fbd;
+      /* Soft sky blue */
+      --color-primary-dark: #4a7ba8;
+      /* Slightly darker */
+      --color-primary-light: #7ba8d4;
+      /* Lighter accent */
+      --color-secondary: #5cb85c;
+      /* Soft green */
+      --color-accent: #e8a854;
+      /* Warm amber accent */
+
+      /* Dark backgrounds */
+      --color-background: #1a1e24;
+      /* Deep charcoal */
+      --color-surface: #252b33;
+      /* Card backgrounds */
+      --color-surface-elevated: #2d353f;
+      /* Elevated surfaces */
+
+      /* Light text on dark backgrounds */
+      --color-text: #e4e8ec;
+      /* Primary text - soft white */
+      --color-text-secondary: #9aa5b1;
+      /* Secondary text */
+      --color-text-muted: #6b7785;
+      /* Muted text */
+
+      /* Subtle borders */
+      --color-border: #3a424d;
+      /* Border color */
+      --color-border-light: #323a44;
+      /* Lighter borders */
+
+      /* Status colors - slightly muted for dark mode */
+      --color-error: #e05c5c;
+      --color-warning: #e8b84a;
+      --color-success: #5cb85c;
+      --color-info: #5dc0d3;
+
+      /* Typography */
       --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       --border-radius: 8px;
-      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+      --border-radius-lg: 12px;
+
+      /* Shadows for dark mode - subtle glows */
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+      --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
     }
 
-    [data-theme="dark"] {
-      --color-background: #0f172a;
-      --color-surface: #1e293b;
-      --color-text: #f1f5f9;
-      --color-text-secondary: #94a3b8;
-      --color-border: #334155;
+    /* Light theme option */
+    [data-theme="light"] {
+      --color-primary: #4a6fa5;
+      --color-primary-dark: #3d5a80;
+      --color-background: #f5f7fa;
+      --color-surface: #ffffff;
+      --color-surface-elevated: #fafbfc;
+      --color-text: #2c3e50;
+      --color-text-secondary: #6c7a89;
+      --color-text-muted: #95a5a6;
+      --color-border: #dce4ec;
+      --color-border-light: #e8eef4;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+      --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
     }
 
     * {
@@ -53,27 +93,42 @@
 
     html,
     body {
-      height: 100%;
+      min-height: 100%;
       font-family: var(--font-family);
       background-color: var(--color-background);
       color: var(--color-text);
       line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
 
-    .navbar {
+    /* Single-SPA router - natural flow */
+    single-spa-router {
+      display: block;
+    }
+
+    /* Navbar - sticky at top */
+    .navbar-section {
       position: sticky;
       top: 0;
+      height: 64px;
       z-index: 100;
       background-color: var(--color-surface);
       border-bottom: 1px solid var(--color-border);
       box-shadow: var(--shadow-sm);
     }
 
+    /* Main content - natural flow with padding */
     .main-content {
-      min-height: calc(100vh - 64px);
       padding: 24px;
-      max-width: 1280px;
-      margin: 0 auto;
+    }
+
+    /* Center content inside main */
+    .main-content>* {
+      max-width: 1400px;
+      margin-left: auto;
+      margin-right: auto;
+      width: 100%;
     }
 
     /* Loading state for MFEs */
@@ -100,6 +155,25 @@
       50% {
         opacity: 0.5;
       }
+    }
+
+    /* Scrollbar styling for a polished look */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+
+    ::-webkit-scrollbar-track {
+      background: var(--color-background);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--color-border);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--color-text-muted);
     }
   </style>
 
