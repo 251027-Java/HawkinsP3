@@ -1,0 +1,16 @@
+# Elasticsearch Configuration
+# S3 repository for log snapshots
+
+cluster.name: pilotquiz-logs
+node.name: elasticsearch
+
+# Network
+network.host: 0.0.0.0
+http.port: 9200
+
+# Paths
+path.data: /usr/share/elasticsearch/data
+path.logs: /usr/share/elasticsearch/logs
+
+# S3 Repository Plugin (pre-installed in official image)
+# Repository will be registered via API after startup
