@@ -75,8 +75,11 @@ pipeline {
     post {
         always {
             node(null) {
-                sh 'docker image prune -f || true'
-                cleanWs()
+                // Aggressive Docker cleanup
+                sh 'docker image prune -af || true'
+                sh 'docker builder prune -af || true'
+                // Clean workspace completely
+                cleanWs(cleanWhenNotBuilt: true, deleteDirs: true, disableDeferredWipeout: true)
             }
         }
         success {
