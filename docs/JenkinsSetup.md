@@ -47,17 +47,28 @@ Install:
 
 ---
 
-## Configure Environment Variables
+## Configure DockerHub Credentials
 
-Go to: `Manage Jenkins` → `System` → `Global properties`
+> [!IMPORTANT]
+> **Do NOT use environment variables for credentials.** Use Jenkins Credentials Manager for security.
 
-1. Check **"Environment variables"**
-2. Add:
+Go to: `Manage Jenkins` → `Credentials` → `System` → `Global credentials`
 
-   | Name | Value |
-   |------|-------|
-   | `DOCKERHUB_USERNAME` | your-dockerhub-username |
-   | `DOCKERHUB_PASSWORD` | your-dockerhub-password-or-token |
+1. Click **Add Credentials**
+2. Configure:
+
+   | Field | Value |
+   |-------|-------|
+   | Kind | Username with password |
+   | Username | your-dockerhub-username |
+   | Password | your-dockerhub-token (not password!) |
+   | ID | `dockerhub-credentials` |
+   | Description | DockerHub credentials |
+
+3. Click **Create**
+
+> [!NOTE]
+> The ID `dockerhub-credentials` is referenced in all Jenkinsfiles. Do not change it.
 
 ---
 
@@ -134,5 +145,9 @@ Repeat for all services:
 
 ## Notes
 
-- **No Maven/Node installation needed** - Pipelines use Docker agents (`maven:3.9-eclipse-temurin-17`, `node:18-alpine`)
+- **No Maven/Node installation needed** - Pipelines use Docker agents
+  - Backend: `maven:3.9-eclipse-temurin-21`
+  - Frontend (React/Root): `node:18-alpine`
+  - Frontend (Angular): `node:20-alpine` (Angular 21 requires Node 20+)
 - **Docker-in-Docker** - Jenkins runs Docker commands by mounting the host's Docker socket
+- **Credentials** - DockerHub credentials use `withCredentials` for security
