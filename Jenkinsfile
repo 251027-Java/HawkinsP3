@@ -63,20 +63,19 @@ pipeline {
 
                     echo "Changed files: ${changes}"
 
-                    // Determine which services need to be built
-                    env.BUILD_EUREKA = changes.any { it.startsWith('backend/eureka-server/') } ? 'true' : 'false'
-                    env.BUILD_GATEWAY = changes.any { it.startsWith('backend/api-gateway/') } ? 'true' : 'false'
-                    env.BUILD_USER = changes.any { it.startsWith('backend/user-service/') } ? 'true' : 'false'
-                    env.BUILD_QUIZ = changes.any { it.startsWith('backend/quiz-service/') } ? 'true' : 'false'
-                    env.BUILD_PROGRESS = changes.any { it.startsWith('backend/progress-service/') } ? 'true' : 'false'
-                    env.BUILD_ROOT_CONFIG = changes.any { it.startsWith('frontend/root-config/') } ? 'true' : 'false'
-                    env.BUILD_REACT_AUTH = changes.any { it.startsWith('frontend/mfe-react-auth/') } ? 'true' : 'false'
-                    env.BUILD_ANGULAR_QUIZ = changes.any { it.startsWith('frontend/mfe-angular-quiz/') } ? 'true' : 'false'
+                    // Determine which services need to be built (source code changes)
+                    env.BUILD_EUREKA = changes.any { it.startsWith('backend/eureka-server/') || it == 'jenkinsfiles/Jenkinsfile.eureka-server' } ? 'true' : 'false'
+                    env.BUILD_GATEWAY = changes.any { it.startsWith('backend/api-gateway/') || it == 'jenkinsfiles/Jenkinsfile.api-gateway' } ? 'true' : 'false'
+                    env.BUILD_USER = changes.any { it.startsWith('backend/user-service/') || it == 'jenkinsfiles/Jenkinsfile.user-service' } ? 'true' : 'false'
+                    env.BUILD_QUIZ = changes.any { it.startsWith('backend/quiz-service/') || it == 'jenkinsfiles/Jenkinsfile.quiz-service' } ? 'true' : 'false'
+                    env.BUILD_PROGRESS = changes.any { it.startsWith('backend/progress-service/') || it == 'jenkinsfiles/Jenkinsfile.progress-service' } ? 'true' : 'false'
+                    env.BUILD_ROOT_CONFIG = changes.any { it.startsWith('frontend/root-config/') || it == 'jenkinsfiles/Jenkinsfile.root-config' } ? 'true' : 'false'
+                    env.BUILD_REACT_AUTH = changes.any { it.startsWith('frontend/mfe-react-auth/') || it == 'jenkinsfiles/Jenkinsfile.mfe-react-auth' } ? 'true' : 'false'
+                    env.BUILD_ANGULAR_QUIZ = changes.any { it.startsWith('frontend/mfe-angular-quiz/') || it == 'jenkinsfiles/Jenkinsfile.mfe-angular-quiz' } ? 'true' : 'false'
 
-                    // Check if infrastructure or Jenkinsfiles changed (rebuild all)
+                    // Check if global infrastructure changed (rebuild all)
                     def infrastructureChanged = changes.any { 
                         it.startsWith('infrastructure/') || 
-                        it.startsWith('jenkinsfiles/') ||
                         it == 'docker-compose.yml' ||
                         it == 'Jenkinsfile'
                     }
