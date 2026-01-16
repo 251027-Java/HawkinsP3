@@ -45,7 +45,7 @@ pipeline {
                 unstash 'source'
                 dir("${SERVICE_DIR}") {
                     sh 'npm ci'
-                    sh 'npm run build:single-spa'
+                    sh 'npm run build:single-spa:mfe-angular-quiz'
                 }
                 stash includes: "${SERVICE_DIR}/**", name: 'built'
             }
