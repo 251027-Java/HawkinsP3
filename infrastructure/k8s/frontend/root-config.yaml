@@ -1,0 +1,54 @@
+# Root Config - Single-SPA Shell
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: root-config
+  namespace: pilotquiz-frontend
+  labels:
+    app: root-config
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: root-config
+  template:
+    metadata:
+      labels:
+        app: root-config
+    spec:
+      containers:
+        - name: root-config
+          image: richardhawkins/pilotquiz-root-config:latest
+          ports:
+            - containerPort: 9000
+          resources:
+            limits:
+              memory: "64Mi"
+              cpu: "250m"
+            requests:
+              memory: "32Mi"
+              cpu: "50m"
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 9000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 9000
+            initialDelaySeconds: 10
+            periodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: root-config
+  namespace: pilotquiz-frontend
+spec:
+  selector:
+    app: root-config
+  ports:
+    - port: 9000
+      targetPort: 9000

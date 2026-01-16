@@ -1,0 +1,48 @@
+# React Auth MFE
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mfe-react-auth
+  namespace: pilotquiz-frontend
+  labels:
+    app: mfe-react-auth
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mfe-react-auth
+  template:
+    metadata:
+      labels:
+        app: mfe-react-auth
+    spec:
+      containers:
+        - name: mfe-react-auth
+          image: richardhawkins/pilotquiz-mfe-react-auth:latest
+          ports:
+            - containerPort: 8080
+          resources:
+            limits:
+              memory: "64Mi"
+              cpu: "250m"
+            requests:
+              memory: "32Mi"
+              cpu: "50m"
+          readinessProbe:
+            httpGet:
+              path: /pilotquiz-react-auth.js
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mfe-react-auth
+  namespace: pilotquiz-frontend
+spec:
+  selector:
+    app: mfe-react-auth
+  ports:
+    - port: 8080
+      targetPort: 8080
