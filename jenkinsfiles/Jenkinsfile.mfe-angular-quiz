@@ -74,7 +74,7 @@ pipeline {
 
     post {
         always {
-            node('any') {
+            node(null) {
                 sh 'docker image prune -f || true'
                 cleanWs()
             }
