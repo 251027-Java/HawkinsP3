@@ -109,93 +109,91 @@ pipeline {
             }
         }
 
-        stage('Build Backend Services') {
-            parallel {
-                stage('Eureka Server') {
-                    when {
-                        expression { env.BUILD_EUREKA == 'true' }
-                    }
-                    steps {
-                        build job: "${EUREKA_JOB}", 
-                              parameters: [string(name: 'BRANCH', value: env.TARGET_BRANCH)],
-                              wait: true, propagate: true
-                    }
-                }
-                stage('API Gateway') {
-                    when {
-                        expression { env.BUILD_GATEWAY == 'true' }
-                    }
-                    steps {
-                        build job: "${GATEWAY_JOB}",
-                              parameters: [string(name: 'BRANCH', value: env.TARGET_BRANCH)],
-                              wait: true, propagate: true
-                    }
-                }
-                stage('User Service') {
-                    when {
-                        expression { env.BUILD_USER == 'true' }
-                    }
-                    steps {
-                        build job: "${USER_JOB}",
-                              parameters: [string(name: 'BRANCH', value: env.TARGET_BRANCH)],
-                              wait: true, propagate: true
-                    }
-                }
-                stage('Quiz Service') {
-                    when {
-                        expression { env.BUILD_QUIZ == 'true' }
-                    }
-                    steps {
-                        build job: "${QUIZ_JOB}",
-                              parameters: [string(name: 'BRANCH', value: env.TARGET_BRANCH)],
-                              wait: true, propagate: true
-                    }
-                }
-                stage('Progress Service') {
-                    when {
-                        expression { env.BUILD_PROGRESS == 'true' }
-                    }
-                    steps {
-                        build job: "${PROGRESS_JOB}",
-                              parameters: [string(name: 'BRANCH', value: env.TARGET_BRANCH)],
-                              wait: true, propagate: true
-                    }
-                }
+        stage('Build Eureka Server') {
+            when {
+                expression { env.BUILD_EUREKA == 'true' }
+            }
+            steps {
+                build job: "${EUREKA_JOB}", 
+                      parameters: [string(name: 'BRANCH', value: env.TARGET_BRANCH)],
+                      wait: true, propagate: true
             }
         }
 
-        stage('Build Frontend Services') {
-            parallel {
-                stage('Root Config') {
-                    when {
-                        expression { env.BUILD_ROOT_CONFIG == 'true' }
-                    }
-                    steps {
-                        build job: "${ROOT_CONFIG_JOB}",
-                              parameters: [string(name: 'BRANCH', value: env.TARGET_BRANCH)],
-                              wait: true, propagate: true
-                    }
-                }
-                stage('React Auth MFE') {
-                    when {
-                        expression { env.BUILD_REACT_AUTH == 'true' }
-                    }
-                    steps {
-                        build job: "${REACT_AUTH_JOB}",
-                              parameters: [string(name: 'BRANCH', value: env.TARGET_BRANCH)],
-                              wait: true, propagate: true
-                    }
-                }
-                stage('Angular Quiz MFE') {
-                    when {
-                        expression { env.BUILD_ANGULAR_QUIZ == 'true' }
-                    }
-                    steps {
-                        build job: "${ANGULAR_QUIZ_JOB}",
-                              parameters: [string(name: 'BRANCH', value: env.TARGET_BRANCH)],
-                              wait: true, propagate: true
-                    }
-                }
+        stage('Build API Gateway') {
+            when {
+                expression { env.BUILD_GATEWAY == 'true' }
+            }
+            steps {
+                build job: "${GATEWAY_JOB}",
+                      parameters: [string(name: 'BRANCH', value: env.TARGET_BRANCH)],
+                      wait: true, propagate: true
+            }
+        }
+
+        stage('Build User Service') {
+            when {
+                expression { env.BUILD_USER == 'true' }
+            }
+            steps {
+                build job: "${USER_JOB}",
+                      parameters: [string(name: 'BRANCH', value: env.TARGET_BRANCH)],
+                      wait: true, propagate: true
+            }
+        }
+
+        stage('Build Quiz Service') {
+            when {
+                expression { env.BUILD_QUIZ == 'true' }
+            }
+            steps {
+                build job: "${QUIZ_JOB}",
+                      parameters: [string(name: 'BRANCH', value: env.TARGET_BRANCH)],
+                      wait: true, propagate: true
+            }
+        }
+
+        stage('Build Progress Service') {
+            when {
+                expression { env.BUILD_PROGRESS == 'true' }
+            }
+            steps {
+                build job: "${PROGRESS_JOB}",
+                      parameters: [string(name: 'BRANCH', value: env.TARGET_BRANCH)],
+                      wait: true, propagate: true
+            }
+        }
+
+        stage('Build Root Config') {
+            when {
+                expression { env.BUILD_ROOT_CONFIG == 'true' }
+            }
+            steps {
+                build job: "${ROOT_CONFIG_JOB}",
+                      parameters: [string(name: 'BRANCH', value: env.TARGET_BRANCH)],
+                      wait: true, propagate: true
+            }
+        }
+
+        stage('Build React Auth MFE') {
+            when {
+                expression { env.BUILD_REACT_AUTH == 'true' }
+            }
+            steps {
+                build job: "${REACT_AUTH_JOB}",
+                      parameters: [string(name: 'BRANCH', value: env.TARGET_BRANCH)],
+                      wait: true, propagate: true
+            }
+        }
+
+        stage('Build Angular Quiz MFE') {
+            when {
+                expression { env.BUILD_ANGULAR_QUIZ == 'true' }
+            }
+            steps {
+                build job: "${ANGULAR_QUIZ_JOB}",
+                      parameters: [string(name: 'BRANCH', value: env.TARGET_BRANCH)],
+                      wait: true, propagate: true
             }
         }
     }
