@@ -1,6 +1,6 @@
 # ELK Stack Docker Compose
 # Deploy on dedicated EC2 instance for centralized logging
-# Optimized for t3.medium (4GB RAM) - services start sequentially
+# Optimized for t3.large (8GB RAM)
 
 services:
   # Elasticsearch - Log storage and search
@@ -14,8 +14,8 @@ services:
       - bootstrap.memory_lock=true
       - xpack.security.enabled=false
       - xpack.security.enrollment.enabled=false
-      # Minimum viable heap for ES 8.x
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      # Recommended: heap = 50% of available memory, max 2GB for small clusters
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
       # S3 repository credentials (use IAM role if on EC2)
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
@@ -23,7 +23,7 @@ services:
       memlock:
         soft: -1
         hard: -1
-    mem_limit: 900m
+    mem_limit: 2g
     volumes:
       - elasticsearch_data:/usr/share/elasticsearch/data
       - ./elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
@@ -39,7 +39,7 @@ services:
       retries: 5
     restart: unless-stopped
 
-  # Logstash - Log ingestion and parsing (minimal config)
+  # Logstash - Log ingestion and parsing
   logstash:
     image: docker.elastic.co/logstash/logstash:8.11.0
     container_name: pilotquiz-logstash
@@ -50,9 +50,8 @@ services:
       - "5000:5000"   # TCP input
       - "9600:9600"   # Monitoring API
     environment:
-      # Minimal heap - just passing logs through
-      - "LS_JAVA_OPTS=-Xms96m -Xmx96m"
-    mem_limit: 250m
+      - "LS_JAVA_OPTS=-Xms512m -Xmx512m"
+    mem_limit: 1g
     depends_on:
       elasticsearch:
         condition: service_healthy
@@ -68,7 +67,7 @@ services:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
       - SERVER_NAME=kibana
       - SERVER_HOST=0.0.0.0
-    mem_limit: 900m
+    mem_limit: 1500m
     ports:
       - "5601:5601"
     depends_on:
@@ -78,10 +77,10 @@ services:
       - elk-network
     healthcheck:
       test: ["CMD-SHELL", "curl -s http://localhost:5601/api/status | grep -q '\"overall\":{\"level\":\"available\"'"]
-      interval: 60s
-      timeout: 30s
+      interval: 30s
+      timeout: 10s
       retries: 10
-      start_period: 180s
+      start_period: 120s
     restart: unless-stopped
 
 volumes:
