@@ -27,7 +27,10 @@ spec:
                 fieldRef:
                   fieldPath: spec.nodeName
             - name: LOGSTASH_HOST
-              value: "${LOGSTASH_HOST}"  # Set to ELK EC2 IP
+              valueFrom:
+                secretKeyRef:
+                  name: elk-credentials
+                  key: LOGSTASH_HOST
           securityContext:
             runAsUser: 0
           resources:
