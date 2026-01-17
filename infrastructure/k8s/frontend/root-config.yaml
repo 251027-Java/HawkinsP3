@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
         - name: root-config
-          image: richardhawkins/pilotquiz-root-config:latest
+          image: hawkinsr/pilotquiz-root-config:latest
           ports:
             - containerPort: 9000
           resources:

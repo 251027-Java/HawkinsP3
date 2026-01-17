@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
         - name: mfe-react-auth
-          image: richardhawkins/pilotquiz-mfe-react-auth:latest
+          image: hawkinsr/pilotquiz-mfe-react-auth:latest
           ports:
             - containerPort: 8080
           resources:

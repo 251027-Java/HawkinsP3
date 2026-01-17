@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
         - name: api-gateway
-          image: richardhawkins/pilotquiz-api-gateway:latest
+          image: hawkinsr/pilotquiz-api-gateway:latest
           ports:
             - containerPort: 8888
           env:

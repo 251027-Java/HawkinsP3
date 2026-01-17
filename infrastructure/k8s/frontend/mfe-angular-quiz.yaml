@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
         - name: mfe-angular-quiz
-          image: richardhawkins/pilotquiz-mfe-angular-quiz:latest
+          image: hawkinsr/pilotquiz-mfe-angular-quiz:latest
           ports:
             - containerPort: 8081
           resources:

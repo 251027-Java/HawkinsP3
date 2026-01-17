@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
         - name: eureka-server
-          image: richardhawkins/pilotquiz-eureka-server:latest
+          image: hawkinsr/pilotquiz-eureka-server:latest
           ports:
             - containerPort: 8761
           resources:

@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
         - name: user-service
-          image: richardhawkins/pilotquiz-user-service:latest
+          image: hawkinsr/pilotquiz-user-service:latest
           ports:
             - containerPort: 8001
           env:

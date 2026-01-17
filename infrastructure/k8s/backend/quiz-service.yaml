@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
         - name: quiz-service
-          image: richardhawkins/pilotquiz-quiz-service:latest
+          image: hawkinsr/pilotquiz-quiz-service:latest
           ports:
             - containerPort: 8002
           env:
