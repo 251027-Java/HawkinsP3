@@ -14,7 +14,7 @@ services:
       - bootstrap.memory_lock=true
       - xpack.security.enabled=false
       - xpack.security.enrollment.enabled=false
-      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
       # S3 repository credentials (use IAM role if on EC2)
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
@@ -33,7 +33,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1536M
+          memory: 1200M
     healthcheck:
       test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -q '\"status\":\"green\"\\|\"status\":\"yellow\"'"]
       interval: 30s
@@ -51,7 +51,7 @@ services:
       - "5000:5000"   # TCP input
       - "9600:9600"   # Monitoring API
     environment:
-      - "LS_JAVA_OPTS=-Xms256m -Xmx512m"
+      - "LS_JAVA_OPTS=-Xms128m -Xmx256m"
     depends_on:
       elasticsearch:
         condition: service_healthy
@@ -60,7 +60,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 640M
+          memory: 384M
 
   # Kibana - Log visualization
   kibana:
@@ -80,7 +80,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: 384M
     healthcheck:
       test: ["CMD-SHELL", "curl -s http://localhost:5601/api/status | grep -q '\"overall\":{\"level\":\"available\"'"]
       interval: 30s
