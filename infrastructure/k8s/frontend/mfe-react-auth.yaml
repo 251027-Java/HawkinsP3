@@ -41,6 +41,7 @@ metadata:
   name: mfe-react-auth
   namespace: pilotquiz-frontend
 spec:
+  type: LoadBalancer
   selector:
     app: mfe-react-auth
   ports:

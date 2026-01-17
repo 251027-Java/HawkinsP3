@@ -41,6 +41,7 @@ metadata:
   name: mfe-angular-quiz
   namespace: pilotquiz-frontend
 spec:
+  type: LoadBalancer
   selector:
     app: mfe-angular-quiz
   ports:
