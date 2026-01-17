@@ -4,7 +4,21 @@ import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 
 // API base URL - points to the API Gateway
-const API_BASE_URL = 'http://localhost:8888';
+// In production, uses same host as the app; in development, falls back to localhost
+const getApiBaseUrl = (): string => {
+  // Check for window config
+  if (typeof window !== 'undefined' && (window as any)['PILOTQUIZ_API_URL']) {
+    return (window as any)['PILOTQUIZ_API_URL'];
+  }
+  // Use same origin with port 8888 for production
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+    return `http://${window.location.hostname}:8888`;
+  }
+  // Default to localhost for development
+  return 'http://localhost:8888';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 export interface Quiz {
     id: number;

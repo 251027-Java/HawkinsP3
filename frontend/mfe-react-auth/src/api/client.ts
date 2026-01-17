@@ -1,11 +1,15 @@
 import axios from 'axios';
 
 // API base URL - points to the API Gateway
-// In production, this should be configured via import map or environment
+// In production, uses same host as the app; in development, falls back to localhost
 const getApiBaseUrl = (): string => {
   // Check for window config (can be set by root-config)
   if (typeof window !== 'undefined' && (window as any).PILOTQUIZ_API_URL) {
     return (window as any).PILOTQUIZ_API_URL;
+  }
+  // Use same origin with port 8888 for production
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+    return `http://${window.location.hostname}:8888`;
   }
   // Default to localhost for development
   return 'http://localhost:8888';
