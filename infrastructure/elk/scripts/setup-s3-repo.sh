@@ -4,7 +4,7 @@
 
 ES_HOST=${ES_HOST:-localhost:9200}
 S3_BUCKET=${S3_BUCKET:-pilotquiz-elk-logs}
-AWS_REGION=${AWS_REGION:-us-east-1}
+AWS_REGION=${AWS_REGION:-us-west-1}
 
 echo "=== Setting up S3 Snapshot Repository ==="
 

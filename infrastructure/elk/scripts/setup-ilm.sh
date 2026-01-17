@@ -1,6 +1,6 @@
 #!/bin/bash
 # Setup Index Lifecycle Management (ILM) Policy
-# 3 days on disk, then snapshot to S3 and delete
+# 3 days on disk, then delete (Basic license compatible)
 
 ES_HOST=${ES_HOST:-localhost:9200}
 
@@ -13,7 +13,12 @@ until curl -s "$ES_HOST/_cluster/health" | grep -q '"status":"green"\|"status":"
 done
 echo "Elasticsearch is ready!"
 
-# Create ILM policy
+# Clean up existing indices and aliases (in case of re-run)
+echo "Cleaning up existing indices..."
+curl -X DELETE "$ES_HOST/pilotquiz-logs-*" 2>/dev/null || true
+echo ""
+
+# Create ILM policy (Basic license - no searchable_snapshot)
 echo "Creating ILM policy..."
 curl -X PUT "$ES_HOST/_ilm/policy/pilotquiz-ilm-policy" -H "Content-Type: application/json" -d '
 {
@@ -40,19 +45,8 @@ curl -X PUT "$ES_HOST/_ilm/policy/pilotquiz-ilm-policy" -H "Content-Type: applic
           "readonly": {}
         }
       },
-      "cold": {
-        "min_age": "3d",
-        "actions": {
-          "set_priority": {
-            "priority": 0
-          },
-          "searchable_snapshot": {
-            "snapshot_repository": "s3_repository"
-          }
-        }
-      },
       "delete": {
-        "min_age": "30d",
+        "min_age": "3d",
         "actions": {
           "delete": {}
         }
@@ -97,8 +91,10 @@ curl -X PUT "$ES_HOST/pilotquiz-logs-000001" -H "Content-Type: application/json"
 echo ""
 echo "=== ILM Policy Setup Complete ==="
 echo ""
-echo "Policy Summary:"
+echo "Policy Summary (Basic License):"
 echo "  - Hot:    0-1 day  (active, searchable)"
 echo "  - Warm:   1-3 days (read-only)"
-echo "  - Cold:   3-30 days (snapshot to S3)"
-echo "  - Delete: 30+ days"
+echo "  - Delete: 3+ days  (removed from disk)"
+echo ""
+echo "Note: For S3 snapshots, set up a scheduled snapshot policy manually"
+echo "or use a cron job to take regular snapshots before deletion."
