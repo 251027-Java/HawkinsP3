@@ -1,6 +1,6 @@
 # ELK Stack Docker Compose
 # Deploy on dedicated EC2 instance for centralized logging
-# Logs archived to S3 after 3 days, deleted after 30 days
+# Uses mem_limit for actual memory constraints (deploy.resources only works in Swarm)
 
 services:
   # Elasticsearch - Log storage and search
@@ -22,6 +22,8 @@ services:
       memlock:
         soft: -1
         hard: -1
+    mem_limit: 1g
+    mem_reservation: 512m
     volumes:
       - elasticsearch_data:/usr/share/elasticsearch/data
       - ./elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
@@ -30,15 +32,12 @@ services:
       - "9300:9300"
     networks:
       - elk-network
-    deploy:
-      resources:
-        limits:
-          memory: 1200M
     healthcheck:
       test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -q '\"status\":\"green\"\\|\"status\":\"yellow\"'"]
       interval: 30s
       timeout: 10s
       retries: 5
+    restart: unless-stopped
 
   # Logstash - Log ingestion and parsing
   logstash:
@@ -52,15 +51,14 @@ services:
       - "9600:9600"   # Monitoring API
     environment:
       - "LS_JAVA_OPTS=-Xms128m -Xmx256m"
+    mem_limit: 400m
+    mem_reservation: 256m
     depends_on:
       elasticsearch:
         condition: service_healthy
     networks:
       - elk-network
-    deploy:
-      resources:
-        limits:
-          memory: 384M
+    restart: unless-stopped
 
   # Kibana - Log visualization
   kibana:
@@ -70,6 +68,9 @@ services:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
       - SERVER_NAME=kibana
       - SERVER_HOST=0.0.0.0
+      - NODE_OPTIONS=--max-old-space-size=256
+    mem_limit: 512m
+    mem_reservation: 256m
     ports:
       - "5601:5601"
     depends_on:
@@ -77,15 +78,13 @@ services:
         condition: service_healthy
     networks:
       - elk-network
-    deploy:
-      resources:
-        limits:
-          memory: 384M
     healthcheck:
       test: ["CMD-SHELL", "curl -s http://localhost:5601/api/status | grep -q '\"overall\":{\"level\":\"available\"'"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+      interval: 60s
+      timeout: 30s
+      retries: 10
+      start_period: 120s
+    restart: unless-stopped
 
 volumes:
   elasticsearch_data:
