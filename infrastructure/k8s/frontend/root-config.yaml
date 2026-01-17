@@ -47,8 +47,9 @@ metadata:
   name: root-config
   namespace: pilotquiz-frontend
 spec:
+  type: LoadBalancer
   selector:
     app: root-config
   ports:
-    - port: 9000
+    - port: 80
       targetPort: 9000

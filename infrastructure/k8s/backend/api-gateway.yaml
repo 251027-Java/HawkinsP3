@@ -55,6 +55,7 @@ metadata:
   name: api-gateway
   namespace: pilotquiz-backend
 spec:
+  type: LoadBalancer
   selector:
     app: api-gateway
   ports:
