@@ -73,15 +73,15 @@ pipeline {
                     env.BUILD_REACT_AUTH = changes.any { it.startsWith('frontend/mfe-react-auth/') || it == 'jenkinsfiles/Jenkinsfile.mfe-react-auth' } ? 'true' : 'false'
                     env.BUILD_ANGULAR_QUIZ = changes.any { it.startsWith('frontend/mfe-angular-quiz/') || it == 'jenkinsfiles/Jenkinsfile.mfe-angular-quiz' } ? 'true' : 'false'
 
-                    // Check if global infrastructure changed (rebuild all)
+                    // Check if critical build infrastructure changed (rebuild all)
+                    // Excludes k8s manifests and scripts which don't affect builds
                     def infrastructureChanged = changes.any { 
-                        it.startsWith('infrastructure/') || 
                         it == 'docker-compose.yml' ||
                         it == 'Jenkinsfile'
                     }
 
                     if (infrastructureChanged) {
-                        echo "Infrastructure changes detected - marking all services for rebuild"
+                        echo "Critical build infrastructure changed - marking all services for rebuild"
                         env.BUILD_EUREKA = 'true'
                         env.BUILD_GATEWAY = 'true'
                         env.BUILD_USER = 'true'
