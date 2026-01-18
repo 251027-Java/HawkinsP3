@@ -36,6 +36,17 @@ pipeline {
             }
         }
 
+        stage('Docker Login') {
+            agent any
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', 
+                                                  usernameVariable: 'DOCKER_USER', 
+                                                  passwordVariable: 'DOCKER_PASS')]) {
+                    sh 'echo ${DOCKER_PASS} | docker login -u ${DOCKER_USER} --password-stdin'
+                }
+            }
+        }
+
         stage('Install & Test') {
             agent {
                 docker {
@@ -106,9 +117,9 @@ pipeline {
     post {
         always {
             node(null) {
-                // Aggressive Docker cleanup
-                sh 'docker image prune -af || true'
-                sh 'docker builder prune -af || true'
+                // Cleanup: only remove dangling images, keep base images cached
+                sh 'docker image prune -f || true'
+                sh 'docker builder prune -f --keep-storage 2GB || true'
                 // Clean workspace completely
                 cleanWs(cleanWhenNotBuilt: true, deleteDirs: true, disableDeferredWipeout: true)
             }
