@@ -1,42 +1,32 @@
-# Ingress Configuration for Minikube
-# Uses nginx ingress controller
+# PilotQuiz Ingress Configuration
+# Routes all traffic through nginx ingress controller with path-based routing
+# Apply with: kubectl apply -f ingress.yaml
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: pilotquiz-ingress
   namespace: pilotquiz-frontend
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
     nginx.ingress.kubernetes.io/cors-allow-origin: "*"
     nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
-    nginx.ingress.kubernetes.io/cors-allow-headers: "Authorization, Content-Type"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "Authorization, Content-Type, X-User-Role"
     nginx.ingress.kubernetes.io/enable-cors: "true"
 spec:
   ingressClassName: nginx
   rules:
-    # Main application (root config)
     - http:
         paths:
-          # Frontend shell
-          - path: /
+          # React MFE assets - must match before root
+          - path: /auth
             pathType: Prefix
-            backend:
-              service:
-                name: root-config
-                port:
-                  number: 9000
-          
-          # React MFE assets
-          - path: /pilotquiz-react-auth.js
-            pathType: Exact
             backend:
               service:
                 name: mfe-react-auth
                 port:
                   number: 8080
           
-          # Angular MFE assets
-          - path: /mfe-angular-quiz
+          # Angular MFE assets - must match before root
+          - path: /quiz
             pathType: Prefix
             backend:
               service:
@@ -44,34 +34,33 @@ spec:
                 port:
                   number: 8081
           
-          # API Gateway (all /api routes)
-          - path: /api
+          # Frontend shell (root config) - catch-all for everything else
+          - path: /
             pathType: Prefix
             backend:
               service:
-                name: api-gateway
+                name: root-config
                 port:
-                  number: 8888
+                  number: 80
 ---
-# Separate ingress for API Gateway in backend namespace
+# API Gateway Ingress - handles all /api/* routes  
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: api-ingress
   namespace: pilotquiz-backend
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
     nginx.ingress.kubernetes.io/cors-allow-origin: "*"
     nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
-    nginx.ingress.kubernetes.io/cors-allow-headers: "Authorization, Content-Type"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "Authorization, Content-Type, X-User-Role"
     nginx.ingress.kubernetes.io/enable-cors: "true"
 spec:
   ingressClassName: nginx
   rules:
     - http:
         paths:
-          - path: /api(/|$)(.*)
-            pathType: ImplementationSpecific
+          - path: /api
+            pathType: Prefix
             backend:
               service:
                 name: api-gateway
