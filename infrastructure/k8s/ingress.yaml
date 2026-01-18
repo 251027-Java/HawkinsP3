@@ -39,8 +39,10 @@ spec:
                 port:
                   number: 8081
           
-          # Frontend shell (root config) - no rewrite needed
-          - path: /(.*)
+          # Frontend shell (root config) - pass through as-is
+          # Uses dummy first group so $2 contains the full path
+          # /pilotquiz-root-config.js → /pilotquiz-root-config.js
+          - path: /()(.*)
             pathType: ImplementationSpecific
             backend:
               service:
