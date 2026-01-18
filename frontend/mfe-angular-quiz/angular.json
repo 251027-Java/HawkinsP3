@@ -35,8 +35,7 @@
               "path": "extra-webpack.config.js",
               "libraryName": "mfe-angular-quiz",
               "libraryTarget": "umd"
-            },
-            "deployUrl": "http://localhost:8081/"
+            }
           },
           "configurations": {
             "production": {
@@ -52,13 +51,15 @@
                   "maximumError": "8kB"
                 }
               ],
-              "outputHashing": "none"
+              "outputHashing": "none",
+              "deployUrl": "/quiz/"
             },
             "development": {
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true,
-              "outputHashing": "none"
+              "outputHashing": "none",
+              "deployUrl": "http://localhost:8081/"
             }
           },
           "defaultConfiguration": "production"
