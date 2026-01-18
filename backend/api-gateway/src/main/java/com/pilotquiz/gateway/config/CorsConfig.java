@@ -22,9 +22,12 @@ public class CorsConfig {
     public CorsWebFilter corsWebFilter() {
         CorsConfiguration corsConfig = new CorsConfiguration();
         corsConfig.setAllowedOrigins(Arrays.asList(
-                "http://localhost:9000", // Root config
-                "http://localhost:8080", // React MFE
-                "http://localhost:8081" // Angular MFE
+                "http://localhost:9000", // Root config (dev)
+                "http://localhost:8080", // React MFE (dev)
+                "http://localhost:8081", // Angular MFE (dev)
+                "http://54.219.206.229", // Root config (EC2)
+                "http://54.219.206.229:8080", // React MFE (EC2)
+                "http://54.219.206.229:8081" // Angular MFE (EC2)
         ));
         corsConfig.setMaxAge(3600L);
         corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));

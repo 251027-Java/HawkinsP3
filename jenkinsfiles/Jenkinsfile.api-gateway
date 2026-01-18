@@ -16,6 +16,7 @@ pipeline {
         SERVICE_DIR = 'backend/api-gateway'
         DOCKER_IMAGE = 'pilotquiz-api-gateway'
         GIT_REPO = 'https://github.com/251027-Java/HawkinsP3.git'
+        APP_EC2_HOST = '54.219.206.229'
     }
 
     stages {
@@ -71,6 +72,21 @@ pipeline {
                             docker logout
                         """
                     }
+                }
+            }
+        }
+
+        stage('Deploy to K8s') {
+            agent any
+            steps {
+                withCredentials([sshUserPrivateKey(credentialsId: 'app-ec2-ssh-key', 
+                                                   keyFileVariable: 'SSH_KEY', 
+                                                   usernameVariable: 'SSH_USER')]) {
+                    sh """
+                        ssh -o StrictHostKeyChecking=no -i \${SSH_KEY} \${SSH_USER}@${APP_EC2_HOST} \\
+                            'kubectl rollout restart deployment ${SERVICE_NAME} -n pilotquiz-backend && \\
+                             kubectl rollout status deployment ${SERVICE_NAME} -n pilotquiz-backend --timeout=120s'
+                    """
                 }
             }
         }
