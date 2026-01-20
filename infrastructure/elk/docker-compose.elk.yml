@@ -69,7 +69,7 @@ services:
       - SERVER_HOST=0.0.0.0
     mem_limit: 1500m
     ports:
-      - "5601:5601"
+      - "80:5601"
     depends_on:
       elasticsearch:
         condition: service_healthy
