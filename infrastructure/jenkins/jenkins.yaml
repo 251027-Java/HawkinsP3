@@ -1,0 +1,51 @@
+# Jenkins Configuration as Code (JCasC)
+# Pre-configures Jenkins with users and basic settings
+
+jenkins:
+  systemMessage: "PilotQuiz CI/CD Pipeline - Configured by JCasC"
+  
+  # Security Realm - Local user database
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: "admin"
+          name: "Administrator"
+          password: "${JENKINS_ADMIN_PASSWORD:-admin123}"
+        - id: "developer"
+          name: "Developer"
+          password: "${JENKINS_DEV_PASSWORD:-dev123}"
+  
+  # Authorization Strategy - Matrix-based security
+  authorizationStrategy:
+    globalMatrix:
+      permissions:
+        # Admin - full access
+        - "Overall/Administer:admin"
+        - "Overall/Read:admin"
+        
+        # Developer - read and build access
+        - "Overall/Read:developer"
+        - "Job/Build:developer"
+        - "Job/Cancel:developer"
+        - "Job/Read:developer"
+        - "Job/Workspace:developer"
+        - "Run/Replay:developer"
+        - "View/Read:developer"
+
+  # Number of executors
+  numExecutors: 4
+  
+  # Quiet period before starting builds
+  quietPeriod: 5
+
+# Unclassified settings
+unclassified:
+  location:
+    url: "${JENKINS_URL:-http://localhost:8080/}"
+    adminAddress: "admin@pilotquiz.com"
+
+# Security settings
+security:
+  scriptApproval:
+    approvedSignatures: []
