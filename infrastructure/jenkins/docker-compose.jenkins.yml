@@ -14,15 +14,9 @@ services:
       - jenkins_home:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock  # Docker socket for builds
       - /usr/bin/docker:/usr/bin/docker            # Docker CLI from host
-      - ./jenkins.yaml:/var/jenkins_home/jenkins.yaml:ro  # JCasC config
     environment:
       - JAVA_OPTS=-Xmx2g -Xms512m -Djenkins.install.runSetupWizard=false
       - JENKINS_OPTS=--prefix=/
-      - CASC_JENKINS_CONFIG=/var/jenkins_home/jenkins.yaml
-      # Set these in .env file or override at runtime
-      - JENKINS_ADMIN_PASSWORD=${JENKINS_ADMIN_PASSWORD:-admin123}
-      - JENKINS_DEV_PASSWORD=${JENKINS_DEV_PASSWORD:-dev123}
-      - JENKINS_URL=${JENKINS_URL:-http://localhost:8080/}
     networks:
       - jenkins-network
     healthcheck:
