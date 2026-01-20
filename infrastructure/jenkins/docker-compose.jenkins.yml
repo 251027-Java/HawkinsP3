@@ -36,7 +36,6 @@ volumes:
   jenkins_home:
     name: jenkins_home
     external: true
-    driver: local
 
 networks:
   jenkins-network:
