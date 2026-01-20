@@ -8,7 +8,7 @@ services:
     restart: unless-stopped
     user: root
     ports:
-      - 80:8080"      # Jenkins UI
+      - "80:8080"      # Jenkins UI
       - "50000:50000"    # Agent communication
     volumes:
       - jenkins_home:/var/jenkins_home
