@@ -1,0 +1,51 @@
+# Angular Quiz MFE
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mfe-angular-quiz
+  namespace: pilotquiz-frontend
+  labels:
+    app: mfe-angular-quiz
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: mfe-angular-quiz
+  template:
+    metadata:
+      labels:
+        app: mfe-angular-quiz
+    spec:
+      containers:
+        - name: mfe-angular-quiz
+          image: hawkinsr/pilotquiz-mfe-angular-quiz:latest
+          ports:
+            - containerPort: 8081
+          resources:
+            limits:
+              memory: "64Mi"
+              cpu: "250m"
+            requests:
+              memory: "32Mi"
+              cpu: "50m"
+          readinessProbe:
+            httpGet:
+              path: /main.js
+              port: 8081
+            initialDelaySeconds: 5
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mfe-angular-quiz
+  namespace: pilotquiz-frontend
+spec:
+  type: LoadBalancer
+  selector:
+    app: mfe-angular-quiz
+  ports:
+    - port: 8081
+      targetPort: 8081

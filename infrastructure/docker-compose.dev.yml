@@ -1,0 +1,373 @@
+# Docker Compose for Local Development - Full Stack
+# Includes infrastructure AND backend services
+# Resource limits applied to prevent hardware overstress
+# For production, services connect to AWS RDS instead of local PostgreSQL
+
+services:
+  # ===========================================
+  # INFRASTRUCTURE
+  # ===========================================
+
+  # PostgreSQL for User Service
+  postgres-user:
+    image: postgres:alpine
+    container_name: pilotquiz-postgres-user
+    environment:
+      POSTGRES_DB: userdb
+      POSTGRES_USER: ${POSTGRES_USER:-pilotquiz}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pilotquiz123}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_user_data:/var/lib/postgresql/data
+    networks:
+      - pilotquiz-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pilotquiz} -d userdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PostgreSQL for Quiz Service
+  postgres-quiz:
+    image: postgres:alpine
+    container_name: pilotquiz-postgres-quiz
+    environment:
+      POSTGRES_DB: quizdb
+      POSTGRES_USER: ${POSTGRES_USER:-pilotquiz}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pilotquiz123}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_quiz_data:/var/lib/postgresql/data
+    networks:
+      - pilotquiz-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pilotquiz} -d quizdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PostgreSQL for Progress Service
+  postgres-progress:
+    image: postgres:alpine
+    container_name: pilotquiz-postgres-progress
+    environment:
+      POSTGRES_DB: progressdb
+      POSTGRES_USER: ${POSTGRES_USER:-pilotquiz}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pilotquiz123}
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_progress_data:/var/lib/postgresql/data
+    networks:
+      - pilotquiz-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pilotquiz} -d progressdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Zookeeper for Kafka
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: pilotquiz-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - pilotquiz-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+
+  # Kafka for event-driven communication
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: pilotquiz-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    networks:
+      - pilotquiz-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  # ===========================================
+  # BACKEND SERVICES
+  # ===========================================
+
+  # Eureka Server - Service Discovery
+  eureka-server:
+    build:
+      context: ../backend/eureka-server
+      dockerfile: Dockerfile
+    container_name: pilotquiz-eureka-server
+    ports:
+      - "8761:8761"
+    networks:
+      - pilotquiz-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 384M
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8761/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ../backend/api-gateway
+      dockerfile: Dockerfile
+    container_name: pilotquiz-api-gateway
+    ports:
+      - "8888:8888"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      JWT_SECRET: ${JWT_SECRET:-your-256-bit-secret-key-for-jwt-signing-min-32-chars}
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - pilotquiz-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 384M
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8888/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # User Service
+  user-service:
+    build:
+      context: ../backend/user-service
+      dockerfile: Dockerfile
+    container_name: pilotquiz-user-service
+    ports:
+      - "8001:8001"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-user:5432/userdb
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-pilotquiz}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-pilotquiz123}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      JWT_SECRET: ${JWT_SECRET:-your-256-bit-secret-key-for-jwt-signing-min-32-chars}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      postgres-user:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - pilotquiz-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.75'
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8001/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Quiz Service
+  quiz-service:
+    build:
+      context: ../backend/quiz-service
+      dockerfile: Dockerfile
+    container_name: pilotquiz-quiz-service
+    ports:
+      - "8002:8002"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-quiz:5432/quizdb
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-pilotquiz}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-pilotquiz123}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      postgres-quiz:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - pilotquiz-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.75'
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8002/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Progress Service
+  progress-service:
+    build:
+      context: ../backend/progress-service
+      dockerfile: Dockerfile
+    container_name: pilotquiz-progress-service
+    ports:
+      - "8003:8003"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-progress:5432/progressdb
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-pilotquiz}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-pilotquiz123}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      postgres-progress:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - pilotquiz-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.75'
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8003/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ===========================================
+  # FRONTEND SERVICES
+  # ===========================================
+
+  # React Authentication MFE
+  mfe-react-auth:
+    build:
+      context: ../frontend/mfe-react-auth
+      dockerfile: Dockerfile
+    container_name: pilotquiz-mfe-react-auth
+    ports:
+      - "8080:8080"
+    depends_on:
+      api-gateway:
+        condition: service_healthy
+    networks:
+      - pilotquiz-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 64M
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/pilotquiz-react-auth.js"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Angular Quiz MFE
+  mfe-angular-quiz:
+    build:
+      context: ../frontend/mfe-angular-quiz
+      dockerfile: Dockerfile
+    container_name: pilotquiz-mfe-angular-quiz
+    ports:
+      - "8081:8081"
+    depends_on:
+      api-gateway:
+        condition: service_healthy
+    networks:
+      - pilotquiz-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 64M
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8081/main.js"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Single-SPA Root Config - Main shell application
+  root-config:
+    build:
+      context: ../frontend/root-config
+      dockerfile: Dockerfile
+    container_name: pilotquiz-root-config
+    ports:
+      - "9000:9000"
+    depends_on:
+      - mfe-react-auth
+      - mfe-angular-quiz
+    networks:
+      - pilotquiz-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 64M
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_user_data:
+  postgres_quiz_data:
+  postgres_progress_data:
+
+networks:
+  pilotquiz-network:
+    driver: bridge
+    name: pilotquiz-network

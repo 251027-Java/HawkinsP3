@@ -1,0 +1,44 @@
+<single-spa-router>
+  <!--
+    Pilot Quiz Application Layout
+    - React MFE handles: Auth routes (login, register, dashboard) + Navbar
+    - Angular MFE handles: Quiz routes (quizzes, progress)
+  -->
+
+  <!-- Persistent Navbar (always visible) -->
+  <nav class="navbar-section">
+    <application name="@pilotquiz/navbar" props="navbarProps"></application>
+  </nav>
+
+  <main class="main-content">
+    <!-- React Auth MFE - handles login, register, dashboard -->
+    <route path="login">
+      <application name="@pilotquiz/react-auth"></application>
+    </route>
+    <route path="register">
+      <application name="@pilotquiz/react-auth"></application>
+    </route>
+    <route path="dashboard">
+      <application name="@pilotquiz/react-auth"></application>
+    </route>
+    <route path="profile">
+      <application name="@pilotquiz/react-auth"></application>
+    </route>
+
+    <!-- Angular Quiz MFE - handles quiz and progress routes -->
+    <route path="quizzes">
+      <application name="@pilotquiz/angular-quiz"></application>
+    </route>
+    <route path="progress">
+      <application name="@pilotquiz/angular-quiz"></application>
+    </route>
+    <route path="admin">
+      <application name="@pilotquiz/angular-quiz"></application>
+    </route>
+
+    <!-- Default route - show React auth (will redirect to login or dashboard) -->
+    <route default>
+      <application name="@pilotquiz/react-auth"></application>
+    </route>
+  </main>
+</single-spa-router>

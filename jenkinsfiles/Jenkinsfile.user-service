@@ -1,0 +1,130 @@
+// Generated with assistance from Gemini AI
+// Reviewed and modified by Richard Hawkins
+pipeline {
+    agent none
+
+    parameters {
+        string(
+            name: 'BRANCH',
+            defaultValue: 'dev',
+            description: 'Branch to build'
+        )
+    }
+
+    environment {
+        SERVICE_NAME = 'user-service'
+        SERVICE_DIR = 'backend/user-service'
+        DOCKER_IMAGE = 'pilotquiz-user-service'
+        GIT_REPO = 'https://github.com/251027-Java/HawkinsP3.git'
+        APP_EC2_HOST = '54.219.206.229'
+    }
+
+    stages {
+        stage('Checkout') {
+            agent any
+            steps {
+                checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: "*/${params.BRANCH}"]],
+                    userRemoteConfigs: [[url: "${GIT_REPO}"]]
+                ])
+                script {
+                    env.BRANCH_NAME = params.BRANCH
+                    env.DOCKER_TAG = "${params.BRANCH}-${BUILD_NUMBER}"
+                }
+                stash includes: '**', name: 'source'
+            }
+        }
+
+        stage('Docker Login') {
+            agent any
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', 
+                                                  usernameVariable: 'DOCKER_USER', 
+                                                  passwordVariable: 'DOCKER_PASS')]) {
+                    sh 'echo ${DOCKER_PASS} | docker login -u ${DOCKER_USER} --password-stdin'
+                }
+            }
+        }
+
+        stage('Build & Test') {
+            agent {
+                docker {
+                    image 'maven:3.9-eclipse-temurin-21'
+                    args '-v $HOME/.m2:/root/.m2'
+                }
+            }
+            steps {
+                unstash 'source'
+                dir("${SERVICE_DIR}") {
+                    sh 'mvn clean package'
+                }
+            }
+            post {
+                always {
+                    junit allowEmptyResults: true, testResults: "${SERVICE_DIR}/target/surefire-reports/*.xml"
+                }
+            }
+        }
+
+        stage('Docker Build & Push') {
+            agent any
+            steps {
+                unstash 'source'
+                dir("${SERVICE_DIR}") {
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', 
+                                                      usernameVariable: 'DOCKER_USER', 
+                                                      passwordVariable: 'DOCKER_PASS')]) {
+                        sh """
+                            docker build -t \${DOCKER_USER}/${DOCKER_IMAGE}:${DOCKER_TAG} -t \${DOCKER_USER}/${DOCKER_IMAGE}:latest .
+                            echo \${DOCKER_PASS} | docker login -u \${DOCKER_USER} --password-stdin
+                            docker push \${DOCKER_USER}/${DOCKER_IMAGE}:${DOCKER_TAG}
+                            docker push \${DOCKER_USER}/${DOCKER_IMAGE}:latest
+                            docker logout
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('Deploy to K8s') {
+            agent any
+            steps {
+                withCredentials([sshUserPrivateKey(credentialsId: 'app-ec2-ssh-key', 
+                                                   keyFileVariable: 'SSH_KEY', 
+                                                   usernameVariable: 'SSH_USER')]) {
+                    sh """
+                        ssh -o StrictHostKeyChecking=no -i \${SSH_KEY} \${SSH_USER}@${APP_EC2_HOST} \\
+                            'kubectl rollout restart deployment ${SERVICE_NAME} -n pilotquiz-backend && \\
+                             kubectl rollout status deployment ${SERVICE_NAME} -n pilotquiz-backend --timeout=120s'
+                    """
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            node(null) {
+                // Remove built service images (keep base images like node, maven)
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', 
+                                                  usernameVariable: 'DOCKER_USER', 
+                                                  passwordVariable: 'DOCKER_PASS')]) {
+                    sh "docker rmi \${DOCKER_USER}/${DOCKER_IMAGE}:${DOCKER_TAG} || true"
+                    sh "docker rmi \${DOCKER_USER}/${DOCKER_IMAGE}:latest || true"
+                }
+                // Remove dangling images only
+                sh 'docker image prune -f || true'
+                sh 'docker builder prune -f --keep-storage 2GB || true'
+                // Clean workspace completely
+                cleanWs(cleanWhenNotBuilt: true, deleteDirs: true, disableDeferredWipeout: true)
+            }
+        }
+        success {
+            echo "Successfully built and pushed ${DOCKER_IMAGE}:${DOCKER_TAG}"
+        }
+        failure {
+            echo "Pipeline failed for ${SERVICE_NAME}"
+        }
+    }
+}

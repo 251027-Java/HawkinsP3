@@ -1,0 +1,93 @@
+# ELK Stack Docker Compose
+# Deploy on dedicated EC2 instance for centralized logging
+# Optimized for t3.large (8GB RAM)
+
+services:
+  # Elasticsearch - Log storage and search
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: pilotquiz-elasticsearch
+    environment:
+      - node.name=elasticsearch
+      - cluster.name=pilotquiz-logs
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=false
+      - xpack.security.enrollment.enabled=false
+      # Recommended: heap = 50% of container limit
+      - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
+      # S3 repository credentials (use IAM role if on EC2)
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    mem_limit: 4g
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+      - ./elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    networks:
+      - elk-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -q '\"status\":\"green\"\\|\"status\":\"yellow\"'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+
+  # Logstash - Log ingestion and parsing
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.11.0
+    container_name: pilotquiz-logstash
+    volumes:
+      - ./logstash/pipeline.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+    ports:
+      - "5044:5044"   # Beats input
+      - "5000:5000"   # TCP input
+      - "9600:9600"   # Monitoring API
+    environment:
+      - "LS_JAVA_OPTS=-Xms512m -Xmx512m"
+    mem_limit: 1g
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - elk-network
+    restart: unless-stopped
+
+  # Kibana - Log visualization
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: pilotquiz-kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - SERVER_NAME=kibana
+      - SERVER_HOST=0.0.0.0
+    mem_limit: 1500m
+    ports:
+      - "80:5601"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - elk-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:5601/api/status | grep -q '\"overall\":{\"level\":\"available\"'"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 120s
+    restart: unless-stopped
+
+volumes:
+  elasticsearch_data:
+    driver: local
+
+networks:
+  elk-network:
+    driver: bridge
+    name: elk-network

@@ -1,0 +1,86 @@
+# User Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-service
+  namespace: pilotquiz-backend
+  labels:
+    app: user-service
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: user-service
+  template:
+    metadata:
+      labels:
+        app: user-service
+    spec:
+      containers:
+        - name: user-service
+          image: hawkinsr/pilotquiz-user-service:latest
+          ports:
+            - containerPort: 8001
+          env:
+            - name: SPRING_DATASOURCE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: rds-credentials
+                  key: USER_DB_URL
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: rds-credentials
+                  key: RDS_USERNAME
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: rds-credentials
+                  key: RDS_PASSWORD
+            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+              value: "http://eureka-server.pilotquiz-backend.svc.cluster.local:8761/eureka/"
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka.pilotquiz-infra.svc.cluster.local:9092"
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: JWT_SECRET
+            - name: JWT_EXPIRATION
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: JWT_EXPIRATION
+          resources:
+            limits:
+              memory: "512Mi"
+              cpu: "750m"
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8001
+            initialDelaySeconds: 45
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8001
+            initialDelaySeconds: 90
+            periodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-service
+  namespace: pilotquiz-backend
+spec:
+  selector:
+    app: user-service
+  ports:
+    - port: 8001
+      targetPort: 8001

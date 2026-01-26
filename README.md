@@ -67,7 +67,7 @@ Access the application at `http://localhost:9000`
 |-------|------------|
 | Frontend Shell | Single-SPA |
 | React MFE | React 18, Vite |
-| Angular MFE | Angular 17 |
+| Angular MFE | Angular 21 |
 | API Gateway | Spring Cloud Gateway |
 | Services | Spring Boot 3.2 |
 | Database | PostgreSQL 15 |

@@ -1,0 +1,28 @@
+# Kubernetes Namespace Configuration
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pilotquiz-infra
+  labels:
+    app.kubernetes.io/part-of: pilotquiz
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pilotquiz-backend
+  labels:
+    app.kubernetes.io/part-of: pilotquiz
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pilotquiz-frontend
+  labels:
+    app.kubernetes.io/part-of: pilotquiz
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pilotquiz-monitoring
+  labels:
+    app.kubernetes.io/part-of: pilotquiz

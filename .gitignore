@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+target/
+build/
+dist/
+
+# Environment files
+.env*
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test outputs
+coverage/
+*.lcov
+/test*
+
+# Build artifacts
+*.jar
+*.war
+
+# Docker
+docker-compose.override.yml
